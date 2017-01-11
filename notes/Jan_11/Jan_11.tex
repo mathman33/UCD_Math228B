@@ -1,0 +1,163 @@
+\documentclass{article}
+
+
+\usepackage[margin=0.6in]{geometry}
+\usepackage{amssymb, amsmath, amsfonts}
+\usepackage{tabularx}
+\usepackage{arydshln}
+\usepackage{mathtools}
+\usepackage{cancel}
+\usepackage{physics}
+\usepackage{pgf}
+\usepackage{enumerate}
+\usepackage{placeins}
+\usepackage{enumitem}
+\usepackage{nth}
+\usepackage{array}
+\usepackage{tikz}
+\usetikzlibrary{arrows,automata}
+\usepackage{nicefrac}
+\usepackage{pgfplots}
+\newcommand{\enth}{$n$th}
+\newcommand{\Rl}{\mathbb{R}}
+\newcommand{\Cx}{\mathbb{C}}
+\newcommand{\sgn}[1]{\text{sgn}\qty[#1]}
+\newcommand{\ran}[1]{\text{ran}\qty[#1]}
+\newcommand{\E}{\varepsilon}
+\newcommand{\qiq}{\qquad \implies \qquad}
+\newcommand{\half}{\nicefrac{1}{2}}
+\newcommand{\third}{\nicefrac{1}{3}}
+\newcommand{\quarter}{\nicefrac{1}{4}}
+\newcommand{\f}[3]{#1\ :\ #2 \rightarrow #3}
+
+\newcommand{\tridsym}[3]{
+    \qty(\begin{array}{ccccc}
+                    #1 & #2 & & & \\
+                    #3 & #1 & #2 & & \\
+                    & \ddots & \ddots & \ddots &  \\
+                    & & #3 & #1 & #2 \\
+                    & & & #3 & #1
+                \end{array})
+}
+
+
+\DeclareMathOperator*{\esssup}{\text{ess~sup}}
+
+\title{MAT 228B Notes}
+\author{Sam Fleischer}
+\date{January 11, 2016}
+
+\begin{document}
+    \maketitle
+
+    \section{Diffusion Equation $u_t = Du_{xx}$ vs.~Advection Equation $u_t = au_x$}
+
+        Diffusion is an example of a parabolic equation.  Advection is an example of a hyperbolic equation.
+
+        \textbf{Parabolic Equation:} $u_t = Lu$ where $L$ is elliptic.
+
+        \textbf{Elliptic Operator:} $L$ is kind of like a Laplacian.  The linear second order operator $L = \sum_{i,j}a_{i,j}\frac{\partial^2}{\partial x_i \partial x_j} + \sum_{i}b_i \frac{\partial}{\partial x_i} + c$ is elliptic if the matrix $[A]_{i,j} = a_{i,j}$ is positive or negative definite.
+
+        \begin{itemize}
+            \item Example: $A = I$ implies $L = \laplacian$ in Cartesian coordinates.
+        \end{itemize}
+
+        \textbf{Hyperbolic Equation:} The linear first-order system $u_t + Au_x = 0$ is hyperbolic if the matrix $A$ has real eigenvalues and is diagonalizable.
+
+        The standard second-order wave equation $u_{tt} = c^2 u_{xx}$ is of this form after some change of variables.
+        \begin{align*}
+            u_{tt} = c^2u_{xx} \\
+            \qquad \text{define} \qquad q = \qty(\begin{array}{cc}q_1 \\ q_2\end{array}) \qquad \text{where} \qquad q_1 = u_t \qquad q_2 = -u_x \\
+            \partial_tq_1 = u_{tt} = c^2u_{xx} = -c^2\partial_xq_2 \\
+            \partial_tq_2 = -u_{tx} = -\partial_xq_1
+        \end{align*}
+        So,
+        \begin{align*}
+            \frac{\partial}{\partial t}\qty(\begin{array}{cc}q_1 \\ q_2\end{array}) = \qty(\begin{array}{cc}0 & -c^2 \\ -1 & 0\end{array})\qty(\begin{array}{cc}q_1 \\ q_2 \end{array})_x \\
+            q_t + \qty(\begin{array}{cc}0 & c^2 \\1 & 0 \end{array})q_x = 0
+        \end{align*}
+        has eigenvalues $\pm c$, which are the wave speeds.
+
+        The solutions to these equations have \emph{very} different behavior.  We need an initial condition $u(x,0) = u_0(x)$.  Suppose $u_0(x)$ is a Gaussian type function.  For the diffusion equation, the ``bump of stuff'' goes down and out.  The solution spreads out.  For the advection equation, the bump does not change shape.  The solution simply translates.  That is, $u(x,t) = u_0(x - at)$.
+
+        Consider the initial condition $u_0(x) = e^{i\xi x}$.  Big $\xi$ means ``lots of wiggles'' per unit space.
+
+        Use the ansatz $u(x,t) = g(t)e^{i\xi x}$
+
+        \subsection{Advection Equation}
+
+            \begin{align*}
+                u_t = g' e^{i\xi x} \qquad u_x = i\xi ge^{i\xi x} \qquad u_{xx} = -\xi^2 g e^{i\xi x}
+            \end{align*}
+            So,
+            \begin{align*}
+                u_t + au_x = 0 \\
+                g'e^{i\xi x} + ai\xi ge^{i\xi x} = 0 \\
+                g' = -ai\xi g
+            \end{align*}
+            This has initial condition $g(0) = 1$ since $u_0(x) = e^{i\xi x}$.  So, $g(t) = e^{-ia\xi t}$.  Thus the solution to the advection equation is
+            \begin{align*}
+                u(x,t) = e^{-ia\xi t}e{i\xi x} = e^{i\xi\qty(x - at)}
+            \end{align*}
+            Notice $\abs{u(x,t)} = 1$ for all time $t$.
+
+        \subsection{Diffusion Equation}
+
+            \begin{align*}
+                u_t = Du_{xx} \\
+                g'e^{i\xi x} = -D\xi^2ge^{i\xi x} \\
+                g' = -D\xi^2g
+            \end{align*}
+            with $g(0) = 1$.  So $g(t) = e^{-D\xi^2t}$.  Thus $u(x,t) = e^{-D\xi^2t}e^{i\xi x}$.  Notice $\abs{u(x,t)} \rightarrow 0$ as $t \rightarrow \infty$.  Notice big $\xi$ leads to rapid decay.  Linear combinations of these (Fourier analysis) shows that the solution gets smoother in time.  For the diffusion equation, if the initial data is discontinuous (or worse), it is instantly smoothed out to be $C^\infty$, that is the solution is $C^\infty$ for $t > 0$.
+
+    \section{Fourier Transform Review}
+
+        Let $u \in L^2(\Rl)$.  That is, $\norm{u}_2 \coloneqq \qty(\int_\Rl\abs{u(x)}^2\dd x)^{\nicefrac{1}{2}} < \infty$.  For $u \in L^2(\Rl)$, the Fourier transform of $u(x)$ is
+        \begin{align}
+            \hat{u}(\xi) = \frac{1}{\sqrt{2\pi}}\int_\Rl u(x)e^{-i\xi x}\dd x
+        \end{align}
+        Picking off the amount of $u$ with $\xi$ amount of ``wiggles.''  It turns out $\hat{u}(\xi)$ is also in $L^2$ and the inverse transform is
+        \begin{align}
+            u(x) = \frac{1}{\sqrt{2\pi}}\int_\Rl \hat{u}(x)e^{i\xi x}\dd \xi
+        \end{align}
+        Parseval's Relation is $\norm{u}_2 = \norm{(\hat{u})}_2$.  We will use a discrete version of this relation to analyze numerical schemes.
+
+        \subsection{Solving the Diffusion Equation using the Fourier Transform}
+
+            \begin{align}
+                u(x) = \frac{1}{\sqrt{2\pi}}\int_\Rl\hat{u}(\xi)e^{i\xi x}\dd \xi \\
+                u_x(x) = \frac{1}{\sqrt{2\pi}}\int_\Rl i\xi\hat{u}(\xi)e^{i\xi x}\dd \xi
+            \end{align}
+            So, $\widehat{u_x}(\xi) = i\xi \hat{u}(\xi)$ and $\widehat{u_{xx}}(\xi) = -\xi^2\hat{u}(x)$.
+
+            Thus,
+            \begin{align}
+                u_t = Du_{xx} \qquad \text{with} \qquad u(x,0) = u_0(x) \\
+                \widehat{u_t} = -D\xi^2\hat{u} \qquad \text{with} \qquad \hat{u}(\xi,0) = \widehat{u_0}(\xi) \\
+                \implies \hat{u} = \widehat{u_0}(t)e^{-D\xi^2 t}
+            \end{align}
+            Then transform back and get
+            \begin{align}
+                u(x,t) = \frac{1}{\sqrt{2\pi}}\int_\Rl \widehat{u_0}(\xi)e^{-D\xi^2t}e^{i\xi x}\dd \xi
+            \end{align}
+
+\end{document}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

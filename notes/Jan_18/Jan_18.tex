@@ -1,0 +1,142 @@
+\documentclass{article}
+
+
+\usepackage[margin=0.6in]{geometry}
+\usepackage{amssymb, amsmath, amsfonts}
+\usepackage{tabularx}
+\usepackage{arydshln}
+\usepackage{mathtools}
+\usepackage{cancel}
+\usepackage{physics}
+\usepackage{pgf}
+\usepackage{enumerate}
+\usepackage{placeins}
+\usepackage{enumitem}
+\usepackage{nth}
+\usepackage{array}
+\usepackage{tikz}
+\usetikzlibrary{arrows,automata}
+\usepackage{nicefrac}
+\usepackage{pgfplots}
+\newcommand{\enth}{$n$th}
+\newcommand{\Rl}{\mathbb{R}}
+\newcommand{\Cx}{\mathbb{C}}
+\newcommand{\sgn}[1]{\text{sgn}\qty[#1]}
+\newcommand{\ran}[1]{\text{ran}\qty[#1]}
+\newcommand{\E}{\varepsilon}
+\newcommand{\qiq}{\qquad \implies \qquad}
+\newcommand{\half}{\nicefrac{1}{2}}
+\newcommand{\third}{\nicefrac{1}{3}}
+\newcommand{\quarter}{\nicefrac{1}{4}}
+\newcommand{\f}[3]{#1\ :\ #2 \rightarrow #3}
+\newcommand{\Dx}{\Delta x}
+\newcommand{\Dt}{\Delta t}
+
+\newcommand{\tridsym}[3]{
+    \qty(\begin{array}{ccccc}
+                    #1 & #2 & & & \\
+                    #3 & #1 & #2 & & \\
+                    & \ddots & \ddots & \ddots &  \\
+                    & & #3 & #1 & #2 \\
+                    & & & #3 & #1
+                \end{array})
+}
+
+
+\DeclareMathOperator*{\esssup}{\text{ess~sup}}
+
+\title{MAT 228B Notes}
+\author{Sam Fleischer}
+\date{January 18, 2016}
+
+\begin{document}
+    \maketitle
+
+    \section{ODE Solvers}
+
+        Given an ODE $y' = f(y)$ with $y(0) = y_0$, an ODE Method returns a sequence $y^n \approx y(n\Dt)$ with $y^0 = y_0$.  Apply the method $y' = \lambda y$ for $\lambda \in \Cx$.  Let $z = \lambda\Dt$.  $z$ is in the \emph{region of absolute stability} of the method if $y^n \rightarrow 0$ as $n \rightarrow \infty$.
+
+        \subsection{Region of Absolute Stability for Forward-Euler}
+
+            So $\dfrac{y^{n+1} - y^n}{\Dt} = \lambda y^n$.  This gives
+            \begin{align*}
+                y^{n+1} = y^n + \Dt\lambda y^n \\
+                y^{n+1} = (1 + z)y^n
+            \end{align*}
+            So $y^n = (1 + z)^ny^0$.  Thus $z$ is in the region of absolute stability, i.e.~$y^n \rightarrow 0$, whenever $\abs{1 + z} < 1$.  On the real line, this corresponds to $z \in (-2,0)$.  So $-2 < \lambda\Dt < 0$.  For a given $\lambda$, this gives a timestep restriction.  In the complex plane, this is the unit open ball around $-1$, that is, $B((-1,0))$.  Ensuring that you are in the region of absolute stability ensures that something that should decay actually does decay.
+
+        \subsection{Forward-Euler for Diffusion}
+
+            1D, Dirichlet homogeneous boundary conditions, i.e.~$u_t = Du_{xx}$ with $u(0,t) = u(1,t) = 0$ and $u(x,0) = f(x)$.
+            \begin{align*}
+                \frac{u^{n+1} - u^n}{\Dt} = \frac{D}{(\Dx)^2}\qty(u^n_{j-1} - 2u^n_j + u^n_{j+1}) = Lu^n
+            \end{align*}
+            where $L$ is some matrix.  For this problem, we can just take the largest eigenvalue to get the maximum timestep.  But this doesn't work in general since the regions of absolute stability won't be as nice.
+
+            We require $\abs{1 + \Dt\lambda} < 1$ for all eigenvalues $\lambda$ of $L$.  The eigenvalues of $L$ are
+            \begin{align*}
+                \lambda_k = \frac{2D}{(\Dx)^2}\qty(\cos(k\pi\Dx) - 1) = -\frac{4D}{(\Dx)^2}\sin^2\qty(\frac{k\pi\Dx}{2}),\qquad k = 1,\dots,N
+            \end{align*}
+            where $\Dx = \dfrac{1}{N+1}$.  These are all negative and real.  So the largest (in magnitude) eigenvalue is $\lambda_N \approx -\dfrac{4D}{\qty(\Dx)^2}$.  So we are going to require that $-1 < 1 + \lambda_N\Dt < 1$, so
+            \begin{align*}
+                -2 < \frac{4D\Dt}{\qty(\Dx)^2} < 0 \\
+                0 < \Dt < \frac{\qty(\Dx)^2}{2D}
+            \end{align*}
+            This is the stability restriction for forward-Euler for the diffusion equation.
+
+        \subsection{Forward-Euler for Advection with Centered-Difference}
+
+            \begin{align*}
+                \frac{u_j^{n} - u_j^n}{\Dt} + a\frac{u_{j+1}6n - u_{j-1}^n}{2\Dx} = 0 \\
+                \implies \frac{u_j^{n} - u_j^n}{\Dt} = Au^n
+            \end{align*}
+            for some matrix $A$.  Compute the eigenvalues of $A$.. the eigenvalues of the centered-difference operators on period domains are complex exponentials.  The $k$th eigenfunction at the $j$th gridpoint is
+            \begin{align*}
+                v^k_j = \exp[\pi i k x_j]
+            \end{align*}
+            Plugging this into the centered difference operator gives
+            \begin{align*}
+                \frac{\exp[i\pi k x_{j+1}] - \exp[i\pi k x_{j-1}]}{2\Dx}
+            \end{align*}
+            Note $x_{j+1} = (j+1)\Dx = x_j + \Dx$.  So,
+            \begin{align*}
+                \frac{\exp[i\pi k x_{j+1}] - \exp[i\pi k x_{j-1}]}{2\Dx} = \frac{\exp[i\pi k(x_j + \Dx)] - \exp[i\pi k (x_j - \Dx)]}{2\Dx} = \underbrace{\qty(\frac{e^{i\pi k\Dx} - e^{-i\pi k\Dx}}{2\Dx})}_{\text{eigenvalue}}e^{i\pi k x_j}
+            \end{align*}
+            So the eigenvalues of the centered-difference operator are
+            \begin{align*}
+                \lambda_k = \frac{i\sin(\pi k \Dx)}{\Dx}
+            \end{align*}
+            So for whatever $k$, $\lambda_k$ is always on the imaginary axis, which is \emph{always} outside the region of absolute stability.  Might this be tolerable?  If you run it and cut it off soon enough it might not be that big of a deal.  But if you run it long enough, you are guaranteed to blow up.
+
+        \subsection{Stiff Problems}
+
+            The diffusion equation is numerically stiff.  The negative real part eigenvalues with a large ratio (?).  There are some negative eigenvalues and some big negative eigenvalues.
+            \begin{align}
+                \frac{\dd y}{\dd t} = \lambda y
+            \end{align}
+            where $\lambda$ is negative and real.  It's a decay rate.  For diffusion,
+            \begin{align}
+                \lambda_k = -\frac{2D}{\qty(\Dx)^2}\qty(\cos(k\pi\Dx) - 1)
+            \end{align}
+            The smallest are $\order{1}$ and the largest are $\order{\frac{1}{\qty(\Dx)^2}}$.  So there are $\order{1}$ timescales and $\order{\frac{1}{\qty(\Dx)^2}}$ timescales.  With forward-Euler, you have to resolve all the time-scales (?).
+
+\end{document}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

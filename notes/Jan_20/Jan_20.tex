@@ -1,0 +1,153 @@
+\documentclass{article}
+
+
+\usepackage[margin=0.6in]{geometry}
+\usepackage{amssymb, amsmath, amsfonts}
+\usepackage{tabularx}
+\usepackage{arydshln}
+\usepackage{mathtools}
+\usepackage{cancel}
+\usepackage{physics}
+\usepackage{pgf}
+\usepackage{enumerate}
+\usepackage{placeins}
+\usepackage{enumitem}
+\usepackage{nth}
+\usepackage{array}
+\usepackage{tikz}
+\usetikzlibrary{arrows,automata}
+\usepackage{nicefrac}
+\usepackage{pgfplots}
+\newcommand{\enth}{$n$th}
+\newcommand{\Rl}{\mathbb{R}}
+\newcommand{\Cx}{\mathbb{C}}
+\newcommand{\sgn}[1]{\text{sgn}\qty[#1]}
+\newcommand{\ran}[1]{\text{ran}\qty[#1]}
+\newcommand{\E}{\varepsilon}
+\newcommand{\qiq}{\qquad \implies \qquad}
+\newcommand{\half}{\nicefrac{1}{2}}
+\newcommand{\third}{\nicefrac{1}{3}}
+\newcommand{\quarter}{\nicefrac{1}{4}}
+\newcommand{\f}[3]{#1\ :\ #2 \rightarrow #3}
+\newcommand{\Dx}{\Delta x}
+\newcommand{\Dt}{\Delta t}
+\newcommand{\hot}{\text{h.o.t.}}
+
+\newcommand{\tridsym}[3]{
+    \qty(\begin{array}{ccccc}
+                    #1 & #2 & & & \\
+                    #3 & #1 & #2 & & \\
+                    & \ddots & \ddots & \ddots &  \\
+                    & & #3 & #1 & #2 \\
+                    & & & #3 & #1
+                \end{array})
+}
+
+
+\DeclareMathOperator*{\esssup}{\text{ess~sup}}
+
+\title{MAT 228B Notes}
+\author{Sam Fleischer}
+\date{January 20, 2016}
+
+\begin{document}
+    \maketitle
+
+    \section{1D Diffusion Equation}
+
+        \begin{align}
+            \frac{u^{n+1} - u^n}{\Dt} = Lu^n
+        \end{align}
+        The eigenvalues of $L$ are $\lambda_k = \dfrac{2D}{\qty(\Dx)^2}\qty(\cos(k\pi\Dx) - 1)$,  $k = 1,\dots,N$ with eigenfunctions $(v_k)_j = \sin(k\pi x_j)$.  Small $k$ gives $\lambda_k = \order{1}$ (low spacial frequencies) and large timescale $\order{1}$.  Large $k$ gives $\lambda_k = \order{\frac{1}{(\Dx)^2}}$ (high scpacial frequencies) and small timescale $\order{(\Dx)^2}$.
+
+        We don't want (generically) the time step on the fastest time scales because they (generically) go away so quickly in time.
+
+        For stiff equations, there are methods which perform well.. (jump over points with high frequencies without harm).
+
+        \subsection{Backward Euler}
+
+            For $y' = f(t,y)$.  Backward Euler is $\frac{y^{n+1} - y^n}{\Dt} = f(t_{n+1}, y^{n+1})$.
+
+            The Region of Absolute Stability for backward Euler satisfies
+            \begin{align}
+                \frac{y^{n+1} - y^n}{\Dt} = \lambda y^{n+1} \\
+                y^{n+1} - y^n = \Dt\lambda y^{n+1} \\
+                \qty(1 - z)y^{n+1} = y^n \\
+                y^{n+1} = \frac{1}{1 - z}y^n
+            \end{align}
+            which means we need $\frac{1}{\abs{1 - z}} < 1$ or $\abs{1 - z}> 1$.  This is outside the open unit ball around $1 + 0i$.  That is, $\Cx\setminus B((1,0))$.  Backward Euler for diffusion ``unconditionally stable''.  This is an ``absolutely stable'' or an ``A-Stable'' method (the entire left plane).  A method is ``A-Stable'' if the entire left half plane of $\Cx$ is contained in the region of absolute stability, which means that a solution that \emph{should} decay actually \emph{does} in discrete time.  The cost to Backward Euler is that the equation is implicit.
+
+        \subsection{Accuracy}
+
+            Both Forward Euler and Backward Euler are first-order accurate in time.  That means is that the truncation errors or the discretization errors are $\order{\Dt}$.
+
+            Let $u(x,t)$ be the solution to $u_t = Du_{xx}$ with appropriate boundary and initial conditions.  The Local Truncation Error $\tau$ for Forward Euler for Diffusion is (the amount by which the discrete solution fails to satisfy the actual solution).  Out difference equation is
+            \begin{align}
+                \frac{u_j^{n+1} - u_j^n}{\Dt} = \frac{D}{\qty(\Dx)^2}\qty(u_{j-1}^n - 2u_j^n + u_{j+1}^n)
+            \end{align}
+            So,
+            \begin{align}
+                \tau_j^n = \frac{u(x_j,t_{n+1}) - u(x_j,t_n)}{\Dt} - \frac{D}{\qty(\Dx)^2}\qty(u(x_{j-1},t_n) - 2u(x_j,t_n) + u(x_{j+1},t_n))
+            \end{align}
+            Expanding around $x = x_j$, $t = t_n$ as $\Dx,\Dt \rightarrow 0$.  The above equation requires three Taylor expansions, and the result is
+            \begin{align}
+                \tau_j^n = u_t + \frac{\Dt}{2}u_{tt} + \order{(\Dt)^2} - D\qty(u_{xx} + \frac{(\Dx)^2}{12}u_{xxxx} + \order{\qty(\Dx)^2})
+            \end{align}
+            So as $\Dx,\Dt \rightarrow 0$,
+            \begin{align}
+                \tau_j^n = \frac{\Dt}{2}u_{tt} - \frac{D}{12}\qty(\Dx)^2u_{xxxx} + \hot
+            \end{align}
+            We have
+            \begin{align}
+                u_t = Du_{xx} \\
+                u_{tt} = (u_t)_t = D(u_{xx})_t = D^2u_{xxxx}
+            \end{align}
+            So,
+            \begin{align}
+                \tau_j^n = \qty(\frac{\Dt}{2}D^2 - \frac{D}{12}\qty(\Dx)^2)u_{xxxx} + \hot
+            \end{align}
+
+            It is the same analysis for Backward Euler, but
+            \begin{align}
+                \tau_j^n = -\qty(\frac{D^2}{2}\Dt + \frac{D}{12}\qty(\Dx)^2)u_{xxxx} + \hot
+            \end{align}
+
+            How do we get higher-order accuracy?  Specifically, how do we get 2nd order in time?  If we average the Forward and Backward Euler, the result is a useful scheme.  Remember,
+            \begin{align}
+                \text{F.E. is }\frac{y^{n+1} - y^n}{\Dt} = f(y^n) \qquad \text{B.E. is }\frac{y^{n+1} - y^n}{\Dt} = f(y^{n+1})
+            \end{align}
+            So (trapzoidal rule),
+            \begin{align}
+                \frac{y^{n+1} - y^n}{\Dt} = \frac{1}{2}\qty(f(y^n) + f(y^{n+1}))
+            \end{align}
+            or (a midpoint rule, not really used because it have a very tiny stability region),
+            \begin{align}
+                \frac{y^{n+1} - y^{n-1}}{2\Dt} = f(y^n)
+            \end{align}
+            or (BDF2, i.e.~one-sided backward-difference in time),
+            \begin{align}
+                \frac{3y^{n+1} - 4y^n + y^{n-1}}{2\Dt} = f(y^{n+1})
+            \end{align}
+
+            These are all relatively second methods to get second-order accuracy in time.  It turns both the Trapezoidal Rule and BDF2 are second-order accurate in time A-stable.
+
+\end{document}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

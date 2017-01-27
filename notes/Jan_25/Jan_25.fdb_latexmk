@@ -1,5 +1,5 @@
 # Fdb version 3
-["pdflatex"] 1485220556 "Jan_23.tex" "Jan_23.pdf" "Jan_23" 1485220557
+["pdflatex"] 1485399088 "Jan_25.tex" "Jan_25.pdf" "Jan_25" 1485399089
   "/usr/local/texlive/2015/texmf-dist/fonts/map/fontname/texfonts.map" 1272929888 3287 e6b82fe08f5336d4d5ebc73fb1152e87 ""
   "/usr/local/texlive/2015/texmf-dist/fonts/tfm/public/amsfonts/cmextra/cmex7.tfm" 1246382020 1004 54797486969f23fa377b128694d548df ""
   "/usr/local/texlive/2015/texmf-dist/fonts/tfm/public/amsfonts/cmextra/cmex8.tfm" 1246382020 988 bdf658c3bfc2d96d3c8b02cfc1c94c20 ""
@@ -22,7 +22,6 @@
   "/usr/local/texlive/2015/texmf-dist/fonts/tfm/public/cm/cmsy10.tfm" 1136768653 1124 6c73e740cf17375f03eec0ee63599741 ""
   "/usr/local/texlive/2015/texmf-dist/fonts/tfm/public/cm/cmsy6.tfm" 1136768653 1116 933a60c408fc0a863a92debe84b2d294 ""
   "/usr/local/texlive/2015/texmf-dist/fonts/tfm/public/cm/cmsy8.tfm" 1136768653 1120 8b7d695260f3cff42e636090a8002094 ""
-  "/usr/local/texlive/2015/texmf-dist/fonts/tfm/public/cm/cmti10.tfm" 1136768653 1480 aa8e34af0eb6a2941b776984cf1dfdc4 ""
   "/usr/local/texlive/2015/texmf-dist/tex/generic/genmisc/nth.sty" 1137109563 1845 5470bde4e3ac5a8928ae0f9e1fbb74b2 ""
   "/usr/local/texlive/2015/texmf-dist/tex/generic/ifxetex/ifxetex.sty" 1284331290 1458 43ab4710dc82f3edeabecd0d099626b2 ""
   "/usr/local/texlive/2015/texmf-dist/tex/generic/oberdiek/ifpdf.sty" 1303254447 7140 ece2cc23d9f20e1f53975ac167f42d3e ""
@@ -179,9 +178,9 @@
   "/usr/local/texlive/2015/texmf-dist/web2c/texmf.cnf" 1428852030 31983 18aeec08f48baa3cf3508d538dd5f459 ""
   "/usr/local/texlive/2015/texmf-var/web2c/xetex/xelatex.fmt" 1432479679 3445950 7f6125c6eb78b33bcedbe55e49dbfd83 ""
   "/usr/local/texlive/2015/texmf.cnf" 1432479636 577 0d611272082f3cdb8e80e09a3c69cf07 ""
-  "Jan_23.aux" 1485220557 478 d35149537cf5033009e42be6edf841c7 ""
-  "Jan_23.tex" 1485220555 8926 2faf54e63c452aaa24eb2411aaf9a4aa ""
+  "Jan_25.aux" 1485399089 354 f598455bd96f725c7dee58887647e4b9 ""
+  "Jan_25.tex" 1485399088 5817 5c47c010e5342dc244f9a258dce06d21 ""
   (generated)
-  "Jan_23.pdf"
-  "Jan_23.aux"
-  "Jan_23.log"
+  "Jan_25.pdf"
+  "Jan_25.aux"
+  "Jan_25.log"

@@ -1,0 +1,134 @@
+\documentclass{article}
+
+
+\usepackage[margin=0.6in]{geometry}
+\usepackage{amssymb, amsmath, amsfonts}
+\usepackage{tabularx}
+\usepackage{arydshln}
+\usepackage{mathtools}
+\usepackage{cancel}
+\usepackage{physics}
+\usepackage{pgf}
+\usepackage{enumerate}
+\usepackage{placeins}
+\usepackage{enumitem}
+\usepackage{nth}
+\usepackage{array}
+\usepackage{tikz}
+\usetikzlibrary{arrows,automata}
+\usepackage{nicefrac}
+\usepackage{pgfplots}
+\newcommand{\enth}{$n$th}
+\newcommand{\Rl}{\mathbb{R}}
+\newcommand{\Cx}{\mathbb{C}}
+\newcommand{\sgn}[1]{\text{sgn}\qty[#1]}
+\newcommand{\ran}[1]{\text{ran}\qty[#1]}
+\newcommand{\E}{\varepsilon}
+\newcommand{\qiq}{\qquad \implies \qquad}
+\newcommand{\half}{\nicefrac{1}{2}}
+\newcommand{\third}{\nicefrac{1}{3}}
+\newcommand{\quarter}{\nicefrac{1}{4}}
+\newcommand{\f}[3]{#1\ :\ #2 \rightarrow #3}
+\newcommand{\Dx}{\Delta x}
+\newcommand{\Dt}{\Delta t}
+\newcommand{\hot}{\text{h.o.t.}}
+\newcommand{\centdiff}{\frac{u_j^{n+1} - u_j^n}{\Dt}}
+
+\newcommand{\tridsym}[3]{
+    \qty(\begin{array}{ccccc}
+                    #1 & #2 & & & \\
+                    #3 & #1 & #2 & & \\
+                    & \ddots & \ddots & \ddots &  \\
+                    & & #3 & #1 & #2 \\
+                    & & & #3 & #1
+                \end{array})
+}
+
+
+\DeclareMathOperator*{\esssup}{\text{ess~sup}}
+
+\title{MAT 228B Notes}
+\author{Sam Fleischer}
+\date{January 25, 2016}
+
+\begin{document}
+    \maketitle
+
+    \section{PDE Theory - Consistency, Convergence, and Stability}
+
+        \subsection{Convergence}
+
+            \begin{itemize}
+                \item In a nutshell, a convergent scheme gives more accurate answers for finer meshes.
+                \item Definition: A numerical method is ``convergent'' if $\forall (x^*, t^*)$ in the domain, $\norm{u_j^n - u(x_j,t_n)} \rightarrow 0$ as $\Dx,\Dt \rightarrow 0$ and $x_j \rightarrow x^*$ and $t_n \rightarrow t^*$.
+                \item Note: sometimes we must constrain $\Dx$ and $\Dt$ as they go to $0$.  An example is the Forward Euler for diffusion, where we require $\Dt \leq \dfrac{(\Dx)^2}{2D}$ so the solution doesn't blow up.
+                \item The main point is that the timestep and spacestep are related by a constraint that ensures the solution doesn't dlow up.
+                \item The definition requires specifying a norm, like the discrete $1$-, $2$-, or $\infty$-norms.  We'll see examples which converge in one norm but not others.
+                \item Convergence looks at the error in the solution of a particular problem, while...
+            \end{itemize}
+
+        \subsection{Consistency}
+
+            \begin{itemize}
+                \item Local Truncation Error (LTE) is the discretization error, that is, the error of the discretization scheme itself.  It is how well differences approximate derivatives.
+                \item Consistency looks at the error in the numerical scheme, not an individual solution to a problem.
+                \item Definition, a scheme is ``consistent'' if the LTE $\rightarrow 0$ as $\Dx,\Dt \rightarrow 0$.
+                \item Example: Forward Euler for Diffusion:
+                \begin{align*}
+                    \centdiff = \frac{D}{(\Dx)^2}\qty(u_{j-1}^n - 2u_j^n + u_{j+1}^n)
+                \end{align*}
+                Let $u(x,t)$ solve $u_t = Du_{xx}$.  Let $\tau_j^n$ be the LTE at $(x_j,t_n)$, that is,
+                \begin{align}
+                    \tau_j^n = \frac{u(x_j,t_n + \Dt) - u(x_j,t_n)}{\Dt} - \frac{D}{(\Dx)^2}\qty(u(x_j-\Dx,t_n) - 2u(x_j,t_n) + u(x_j+\Dx,t_n)).
+                \end{align}
+                We are interested in how this acts as $\Dx,\Dt \rightarrow 0$, so we look at the Taylor expansions and see that
+                \begin{align}
+                    \tau_j^n = \frac{\Dt}{2}u_{tt}(x_j,t_n) - \frac{D}{12}\qty(\Dx)^2u_{xxxx}(x_j,t_n) + \hot
+                \end{align}
+                The take-away:
+                \begin{align}
+                    \tau = \order{\Dt} + \order{(\Dx)^2}.
+                \end{align}
+            \end{itemize}
+
+        \subsection{Stability}
+
+            \begin{itemize}
+                \item How do we relate LTE (consistency) and convergence?  Through ``stability.''
+                \item The Lax-Equivalence Theorem (a.k.a.~the Fundamental Theorem of Finite Differences) says:
+                \begin{itemize}
+                    \item A linear, consistent difference scheme to a well-posed linear PDE is convergent if and only if it is stable.
+                    \item In practice, we will use
+                    \begin{align}
+                        \text{stability} + \text{consistency} \implies \text{convergence} \qquad \text{(for linear PDEs and linear schemes)}
+                    \end{align}
+                \end{itemize}
+                \item Definition: Consider the linear update rule $u^{n+1} = Bu^n + b^n$.  Let $u^n$ and $v^n$ be two different solutions to the difference scheme (that is, derived from $u^0$ not necessarily equal to $v^0$).  The method is ``stable'' if $\forall T > 0$, $\exists$ a constant $K_T$ such that $\norm{u^n - v^n} \leq K_T\norm{u^0 - v^0}$, independent of $u^0$, $v^0$, for all $n\Dt \leq T$.
+                \begin{itemize}
+                    \item Note: This is independent of the number of timesteps needed to reach $T$, which is an actual time.
+                    \item Another note: The scheme could be more general, i.e.~$B_1u^{n+1} = B_2u^n + \Dt f^n$, but if either $B_1$ or $B_2$ is invertible, it is equivalent.
+                \end{itemize}
+                \item Alternate Definition (Lax-Richtmyer): The scheme is ``stable'' if  $\forall T > 0$, $\exists$ a constant $C_T > 0$ independent of $\Dt$ such that $\norm{B^n} \leq C_T$ dor all $n\Dt \leq T$ (remember $B$ depends on $\Dt$ and $\Dx$).
+            \end{itemize}
+
+
+\end{document}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

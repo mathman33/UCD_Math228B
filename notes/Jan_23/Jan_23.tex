@@ -169,26 +169,26 @@
                 \end{align*}
                 \item The Adams Methods
                 \begin{itemize}
-                    \item \begin{align}
+                    \item \begin{align*}
                         y^{n+r} - y^{n+r-1} = \Dt\sum_{j=0}^r\beta_jf(y^{n+j})
-                    \end{align}
+                    \end{align*}
                     \item If $\beta_r = 0$, this is called Adams-Bashforth (eg. Forward Euler is an AB method)
-                    \begin{align}
+                    \begin{align*}
                         y^{n+1} - y^n = \Dt f(y^n)
-                    \end{align}
+                    \end{align*}
                     and AB2 is
-                    \begin{align}
+                    \begin{align*}
                         y^{n+1} - y^n = \Dt\frac{1}{2}\qty(3f(y^n) - f(y^{n-1}))
-                    \end{align}
+                    \end{align*}
                     \item If $\beta_r \neq 0$, Adams Moulton Method implicit time (e.g.~trapezoidal rule)
-                    \begin{align}
+                    \begin{align*}
                         y^{n+1} - y^n = \Dt\frac{1}{2}\qty(f(y^n) + f(y^{n+1}))
-                    \end{align}
+                    \end{align*}
                 \end{itemize}
                 \item BDF-Backward (difference formulas)
-                \begin{align}
+                \begin{align*}
                     \sum_{j=0}^r\alpha_jy^{n+j} = \Dt\beta_rf(y^{n+r})
-                \end{align}
+                \end{align*}
                 These are good for stiff equations.  Backward Euler is BDF1.  High order BDFs are great if you have lots of eigenvalues clustered along the negative real axis.
             \end{itemize}
 

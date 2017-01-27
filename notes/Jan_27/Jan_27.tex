@@ -1,0 +1,181 @@
+\documentclass{article}
+
+
+\usepackage[margin=0.6in]{geometry}
+\usepackage{amssymb, amsmath, amsfonts}
+\usepackage{tabularx}
+\usepackage{arydshln}
+\usepackage{mathtools}
+\usepackage{changepage}
+\usepackage{cancel}
+\usepackage{physics}
+\usepackage{pgf}
+\usepackage{enumerate}
+\usepackage{placeins}
+\usepackage{enumitem}
+\usepackage{nth}
+\usepackage{array}
+\usepackage{tikz}
+\usetikzlibrary{arrows,automata}
+\usepackage{nicefrac}
+\usepackage{pgfplots}
+\newcommand{\enth}{$n$th}
+\newcommand{\Rl}{\mathbb{R}}
+\newcommand{\Cx}{\mathbb{C}}
+\newcommand{\sgn}[1]{\text{sgn}\qty[#1]}
+\newcommand{\ran}[1]{\text{ran}\qty[#1]}
+\newcommand{\E}{\varepsilon}
+\newcommand{\qiq}{\qquad \implies \qquad}
+\newcommand{\half}{\nicefrac{1}{2}}
+\newcommand{\third}{\nicefrac{1}{3}}
+\newcommand{\quarter}{\nicefrac{1}{4}}
+\newcommand{\f}[3]{#1\ :\ #2 \rightarrow #3}
+\newcommand{\Dx}{\Delta x}
+\newcommand{\Dt}{\Delta t}
+\newcommand{\hot}{\text{h.o.t.}}
+\newcommand{\centdiff}{\frac{u_j^{n+1} - u_j^n}{\Dt}}
+
+\newcommand{\tridsym}[3]{
+    \qty(\begin{array}{ccccc}
+                    #1 & #2 & & & \\
+                    #3 & #1 & #2 & & \\
+                    & \ddots & \ddots & \ddots &  \\
+                    & & #3 & #1 & #2 \\
+                    & & & #3 & #1
+                \end{array})
+}
+
+
+\DeclareMathOperator*{\esssup}{\text{ess~sup}}
+
+\title{MAT 228B Notes}
+\author{Sam Fleischer}
+\date{January 27, 2016}
+
+\begin{document}
+    \maketitle
+
+    \section{Review}
+        Stability means the amount of growth you get doesn't increase as you refine the mesh.
+
+    \section{Proof of (one direction of) the Lax Equivalence Theorem}
+        We will show
+        \begin{align*}
+            \text{consistent} + \text{stable} = \text{convergent}
+        \end{align*}
+        Set $u^{n+1} = Bu^n + b^n$ (linear scheme for a linear PDE).  Let $u_\text{sol}^n$ be the solution of the PDE sampled on the mesh at time $t_n$.
+
+        We want the error $e^n \coloneqq u^n - u_\text{sol}^n \rightarrow 0$ as $\Dx,\Dt \rightarrow 0$.
+
+        \begin{adjustwidth}{1in}{0in}
+            Forward Euler is
+            \begin{align*}
+                \centdiff &= Lu^n + f^n \\
+                \frac{u_\text{sol}^{n+1} - u_\text{sol}^n}{\Dt} &= Lu_\text{sol}^n + f^n + \underbrace{\tau^n}_\text{LTE} \\
+                u_\text{sol}^{n+1} &= \qty(I + \Dt L)u_\text{sol}^n + \Dt f^n + \Dt \tau^n
+            \end{align*}
+            So,
+            \begin{align*}
+                u_\text{sol}^{n+1} &= Bu_\text{sol}^n + b^n + \Dt \tau^n
+            \end{align*}
+        \end{adjustwidth}
+
+        Subtracting $u_\text{sol}^{n+1} = Bu_\text{sol}^n + b^n + \Dt \tau^n$ from $u^{n+1} = Bu^n + b^n$ gives
+        \begin{align*}
+            e^{n+1} = Be^n - \Dt\tau^n
+        \end{align*}
+        Assuming $e^0 = 0$ (starting at the correct initial conditions), then $e^1 = Be^0 - \Dt \tau^0 = -\Dt \tau^0$ and
+        \begin{align*}
+            e^2 &= -\Dt B\tau^0 - \Dt \tau^1 \\
+            e^3 &= -\Dt\qty(B^2\tau^0 + B\tau^1 + \tau^2) \\
+            &\ \vdots \\
+            e^n &= -\Dt\sum_{k=0}^{n-1}B^{n-k-1}\tau^k
+        \end{align*}
+        So,
+        \begin{align*}
+            \norm{e^n} &= \Dt\norm{\sum_{k=0}^{n-1}B^{n-k-1}\tau^k} \\
+            &\leq \Dt \sum_{k=0}^{n-1}\norm{B^{n-k-1}\tau^k} \\
+            &\leq \Dt \sum_{k=0}^{n-1}\norm{B^{n-k-1}}\norm{\tau^k}
+        \end{align*}
+        We haven't used consistency or stability yet.
+        \begin{adjustwidth}{1in}{0in}
+            From stability, $n - k - 1 < n$ implies $\norm{B^{n-k-1}} \leq C_T$.
+        \end{adjustwidth}
+        So,
+        \begin{align*}
+            \norm{e^n} \leq \Dt C_T \sum_{k=0}^{n-1}\norm{\tau^k}
+        \end{align*}
+        We can bound $\displaystyle\tau \leq \max_{k}\norm{\tau^k}$.  So,
+        \begin{align*}
+            \norm{e^n} &\leq n\Dt C_T \max_{k}\norm{\tau^k} \\
+            &= TC_T \max_{k}\norm{\tau^k} \rightarrow 0 \text{ as } \Dx,\Dt \rightarrow 0
+        \end{align*}
+        because it is consistent. \hfill $\square$.
+
+    \section{Stability of Crank-Nicolson for Diffusion in $2$-norm}
+        \begin{align*}
+            \centdiff = \frac{1}{2}\qty(Lu^n + L^{n+1}) + \underbrace{f^{n+\half}}_{\text{or } \half\qty(f^n+f^{n+1})} \\
+            \implies \qty(I - \frac{\Dt}{2}L)u^{n+1} = \qty(I + \frac{\Dt}{2}L)u^n + \Dt f^{n+\half} \\
+            u^{n+1} = \qty(I + \frac{\Dt}{2}L)\qty(I - \frac{\Dt}{2}L)^{-1}u^n + \Dt\qty(I - \frac{\Dt}{2}L)^{-1}f^{n+\half}
+        \end{align*}
+        Note.. for analysis, the bottom line is fine, but for implementation, solving the second line is better.  Note: since the eigenvalue of $I$ is $1$, and the eigenvalues of $L$ are nonpositive.  So the eigenvalues of $I - \frac{\Dt}{2}L$ are greater than $0$ (greater than or equal to $1$).
+
+        Set $B \coloneqq \qty(I - \frac{\Dt}{2}L)^{-1}\qty(I + \frac{\Dt}{2}L)$.  Generally, products of symmetric matrices are not symmetric, unless they commute.  But they do, so it is.  $L$ is symmetric and $\qty(I - \frac{\Dt}{2}L)^{-1}$ and $I + \frac{\Dt}{2}L$ commute, thus $B$ is symmetric.
+
+        We know
+        \begin{align*}
+            \norm{B^n}_2 \leq \norm{B}_2^n
+        \end{align*}
+
+        Let $\lambda_k$ be an eigenvalue of $L$.  Then the eigenvalues of $B$ are
+        \begin{align*}
+            \mu_k = \frac{1 + \frac{\Dt}{2}\lambda_k}{1 - \frac{\Dt}{2}\lambda_k}
+        \end{align*}
+
+        We know $\displaystyle\norm{B}_2 = \max_k\abs{\frac{1 + \frac{\Dt}{2}\lambda_k}{1 - \frac{\Dt}{2}\lambda_k}}$.  Because $\lambda_k \leq 0$, we know $\norm{B}_2 \leq 1$.  So, $\norm{B^n}_2 \leq 1$.
+
+    \section{Stability for F.E.~ for Diffusion in $\infty$-norm}
+        \begin{align*}
+            \centdiff = Lu^n + f^n \\
+            u^{n+1} = \underbrace{\qty(I + \Dt L)}_Bu^n + \Dt f^n
+        \end{align*}
+        We know $\norm{B^n}_\infty \leq \norm{B}^n_\infty$.
+        \begin{align*}
+            \norm{B}_\infty = (\text{max row sum})(B)
+        \end{align*}
+        One row of the matrix..
+        \begin{align*}
+            u_j^{n+1} = \frac{D\Dt}{\qty(\Dx)^2}u_{j-1}^n + \qty(1 - \frac{2D\Dt}{\qty(\Dx)^2})u_j^n + \frac{D\Dt}{\qty(\Dx)^2}u_{j+1}^n + \Dt f_j^n
+        \end{align*}
+        Now,
+        \begin{align*}
+            \norm{B}_\infty = \abs{\frac{D\Dt}{\qty(\Dx)^2}} + \abs{1 - \frac{2D\Dt}{\qty(\Dx)^2}} + \abs{\frac{D\Dt}{\qty(\Dx)^2}}
+        \end{align*}\tabularnewline
+        If the middle term is positive, i.e.~$1 - \frac{2D\Dt}{\qty(\Dx)^2} \geq 0$, then
+        \begin{align*}
+            \norm{B}_\infty = 1, \qquad \text{ if } \Dt \leq \frac{\qty(\Dx)^2}{2D}
+        \end{align*}
+        This is the same restriction we saw from the absolute stability analysis.  So again we get $\norm{B^n}_\infty \leq \norm{B}_\infty^n \leq 1$.
+
+
+
+\end{document}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

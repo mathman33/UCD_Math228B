@@ -1,0 +1,178 @@
+\documentclass{article}
+
+
+\usepackage[margin=0.6in]{geometry}
+\usepackage{amssymb, amsmath, amsfonts}
+\usepackage{tabularx}
+\usepackage{arydshln}
+\usepackage{mathtools}
+\usepackage{changepage}
+\usepackage{cancel}
+\usepackage{physics}
+\usepackage{pgf}
+\usepackage{enumerate}
+\usepackage{placeins}
+\usepackage{enumitem}
+\usepackage{nth}
+\usepackage{array}
+\usepackage{tikz}
+\usetikzlibrary{arrows,automata}
+\usepackage{nicefrac}
+\usepackage{pgfplots}
+\newcommand{\enth}{$n$th}
+\newcommand{\Rl}{\mathbb{R}}
+\newcommand{\Cx}{\mathbb{C}}
+\newcommand{\sgn}[1]{\text{sgn}\qty[#1]}
+\newcommand{\ran}[1]{\text{ran}\qty[#1]}
+\newcommand{\E}{\varepsilon}
+\newcommand{\qiq}{\qquad \implies \qquad}
+\newcommand{\half}{\nicefrac{1}{2}}
+\newcommand{\third}{\nicefrac{1}{3}}
+\newcommand{\quarter}{\nicefrac{1}{4}}
+\newcommand{\f}[3]{#1\ :\ #2 \rightarrow #3}
+\newcommand{\Dx}{\Delta x}
+\newcommand{\Dt}{\Delta t}
+\newcommand{\hot}{\text{h.o.t.}}
+\newcommand{\centdiff}{\frac{u_j^{n+1} - u_j^n}{\Dt}}
+
+\newcommand{\tridsym}[3]{
+    \qty(\begin{array}{ccccc}
+                    #1 & #2 & & & \\
+                    #3 & #1 & #2 & & \\
+                    & \ddots & \ddots & \ddots &  \\
+                    & & #3 & #1 & #2 \\
+                    & & & #3 & #1
+                \end{array})
+}
+
+
+\DeclareMathOperator*{\esssup}{\text{ess~sup}}
+
+\title{MAT 228B Notes}
+\author{Sam Fleischer}
+\date{February 1, 2016}
+
+\begin{document}
+    \maketitle
+
+    \section{Von Neumann Analysis}
+
+        This is stability analysis of different schemes using Fourier analysis.  The diffusion equation,
+        \begin{align*}
+            u_t = Du_{xx}
+        \end{align*}
+        Using Fourier analysis in $x$, we know $\hat{u}_t(\xi,t) = -D\xi^2\hat{u}(\xi,t)$.
+
+        Von Neumann Analysis is used to analyze constant-coefficient linear problems on the whole real line or a periodic domain.
+
+        \subsection{On the Real Line (Infinite 1D Lattice)}
+
+            Let $x_j = j\Dx$ where $j \in \mathbb{Z}$.  We will use the fact that complex exponentials $v_j = e^{i\xi x_j}$ are eigenfunctions of difference operators.  The forward difference operator
+            \begin{align*}
+                (D_+v)_j \coloneqq \frac{v_{j+1} - v_j}{\Dx}
+            \end{align*}
+            applied to $v_j = e^{i\xi x_j}$ gives
+            \begin{align*}
+                (D_+v)_j = \frac{e^{i\xi x_{j+1}} - e^{i\xi x_j}}{\Dx} = e^{i\xi x_j}\underbrace{\qty(\frac{e^{i\xi\Dx} - 1}{\Dx})}_\text{eigenvalue $\lambda_j(\xi)$ for $v_j$}
+            \end{align*}
+            Note the eigenvalues of $v_j$ are dependent on the wave number $\xi$.
+            For the second-difference operator,
+            \begin{align*}
+                (D^2v)_j = \frac{v_{j-1} + 2v_j + v_{j+1}}{\Dx^2} = \frac{e^{i\xi x_{j-1}} - 2e^{i\xi x_j} + e^{i\xi x_{j+1}}}{\Dx^2} &= e^{i\xi x_j}\underbrace{\qty(\frac{e^{-i\xi\Dx} - 2 + e^{i\xi\Dx}}{\Dx^2})}_\text{eigenvalue} = \underbrace{\frac{2}{\Dx^2}(\cos(\xi\Dx) - 1)}_\text{eigenvalue}v_j
+            \end{align*}
+            Sometimes this is easy to write as $\lambda = -\frac{4}{\Dx^2}\sin^2(\frac{\xi\Dx}{2})$.
+
+            Let $v_j$ be a discrete function on the discrete lattice $x_j = j\Dx$.  The Fourier transform of the infinite sequence $v_j$ is
+            \begin{align*}
+                \hat{v}(\xi) = \frac{\Dx}{\sqrt{2\pi}}\sum_{j\in\mathbb{Z}}v_j e^{i\xi x_j}
+            \end{align*}
+            This looks just like a discretized version of the continuous Fourier Transform.  This is the projection of the function onto the eigenfunctions.  $\xi$ is continuous, but it's bounded.  The highest spacial frequency representable on the discrete mesh with $\Dx$ is $2\Dx$, and the wavelength of $e^{i\xi x_j}$ is (Bob talked really fast), anyway, $2\Dx = \frac{2\pi}{\xi}$, so $\abs{\xi} \leq \frac{\pi}{\Dx}$.
+
+            The inverse Fourier transform is given by
+            \begin{align*}
+                v_j = \frac{1}{\sqrt{2\pi}}\int_{-\frac{\pi}{\Dx}}^{\frac{\pi}{\Dx}} \hat{v}(\xi)e^{i\xi x_j}\dd\xi
+            \end{align*}
+
+            There is a duality between the spaces $\mathbb{Z}$ and $[a,b]$, and between $\Rl$ and $\Rl$.  We will use Parseval's relation, which is $\norm{v(j)}_2 = \norm{\hat{v}(\xi)}_2$.  The ``two-norm'' of the discrete function is
+            \begin{align*}
+                \norm{v(j)}_2 = \qty(\Dx\sum_{j\in\mathbb{Z}}\abs{v_j}^2)^{\nicefrac{1}{2}}
+            \end{align*}
+            We can use this for stability analysis:
+            \begin{align*}
+                u^{n+1} = Bu^n
+            \end{align*}
+            Previously, we want to control $\norm{B}_2 \leq 1 + \alpha\Dt$ for stability.  Instead, we can show that $\norm{u^{n+1}}_2 \leq \qty(1 + \alpha\Dt)\norm{u^n}_2$.  Why is this equivalent?  Suppose the statement.  Then
+            \begin{align*}
+                \frac{\norm{u^{n+1}}_2}{\norm{u^n}_2} \leq 1 + \alpha\Dt \implies {\norm{Bu^n}_2}{\norm{u^n}_2} \leq 1 + \alpha\Dt
+            \end{align*}
+            Since this is true for all $u$, maximize $\norm{B}_2 \leq 1 + \alpha\Dt$.
+
+            So we can look at the norms of the discrete functions (and so the norms of their Fourier transforms) in order to show stability of the scheme.
+
+            If we can show that
+            \begin{align*}
+                \norm{\hat{u}^{n+1}}_2 \leq \qty(1 + \alpha\Dt)\norm{\hat{u}^n}_2,
+            \end{align*}
+            then the scheme is stable.
+
+    \section{Forward Euler for Diffusion}
+
+        $$u_j^{n+1} = u_j^n + \frac{\Dt}{\Dx^2}D\qty(u_{j-1}^n - 2u_j^n + u_{j+1}^n).$$
+        We can represent $u_j^n$ as
+        \begin{align*}
+            u_j^n = \frac{1}{\sqrt{2\pi}}\int_{-\nicefrac{\pi}{\Dx}}^{\nicefrac{\pi}{\Dx}}\hat{u}^n(\xi)e^{i\xi x_j}\dd \xi
+        \end{align*}
+        But, after some manipulation,
+        \begin{align*}
+            u_j^{n+1} = \frac{1}{\sqrt{2\pi}}\int_{-\nicefrac{\pi}{\Dx}}^{\nicefrac{\pi}{\Dx}}\qty(1 + \frac{\Dt D}{\Dx^2}\qty(e^{-i\xi\Dx} - 2 + e^{i\xi\Dx}))\hat{u}^n(\xi)e^{i\xi x_j}\dd\xi
+        \end{align*}
+        Now we throw both sides into the Fourier transform:
+        \begin{align*}
+            \hat{u}^{n+1}(\xi) = \qty(1 + \frac{2\Dt D}{\Dx^2}\qty(\cos(\xi\Dx) - 1))\hat{u}^n(\xi)
+        \end{align*}
+        This is of the form $\hat{u}^{n+1}(\xi) = g(\xi)\hat{u}^n(\xi)$.  \textbf{Differences have become multiplication}.  $g(\xi)$ is called the amplification factor.  It is the amount by which the Fourier transform gets multiplied by in each step.
+        In Fourier space,
+        \begin{align*}
+            \norm{\hat{u}^{n+1}}_2 = \norm{g(\xi)\hat{u}^n(\xi)}_2 \leq \norm{g(\xi)}_\infty\norm{\hat{u}^n(\xi)}_2 && \text{using H$\ddot{\text{o}}$lder's Inequality}
+        \end{align*}
+        If we can show that $\displaystyle\max_\xi\abs{g(\xi)} \leq 1 + \alpha \Dt$, then the scheme is stable.  So,
+        \begin{align*}
+            g(\xi) = 1 - \frac{4D\Dt}{\Dx^2}\sin^2\qty(\frac{\xi\Dx}{2})
+        \end{align*}
+        So
+        \begin{align*}
+            \abs{g(\xi)} \leq 1 \qquad \text{for all } \xi
+        \end{align*}
+        means
+        \begin{align*}
+            -1 \leq 1 - \frac{4D\Dt}{\Dx^2}\sin^2\qty(\frac{\xi\Dx}{2}) \leq 1.
+        \end{align*}
+        This requires that
+        \begin{align*}
+            0 \leq \frac{4D\Dt}{\Dx^2}\sin^2\qty(\frac{\xi\Dx}{2}) \leq 2
+        \end{align*}
+        This holds for all $\xi$ if
+        \begin{align*}
+            \Dt \leq \frac{\Dx^2}{2D}
+        \end{align*}
+
+\end{document}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

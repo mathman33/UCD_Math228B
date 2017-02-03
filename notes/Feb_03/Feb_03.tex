@@ -1,0 +1,118 @@
+\documentclass{article}
+
+
+\usepackage[margin=0.6in]{geometry}
+\usepackage{amssymb, amsmath, amsfonts}
+\usepackage{tabularx}
+\usepackage{arydshln}
+\usepackage{mathtools}
+\usepackage{changepage}
+\usepackage{asymptote}
+\usepackage{cancel}
+\usepackage{physics}
+\usepackage{pgf}
+\usepackage{enumerate}
+\usepackage{placeins}
+\usepackage{enumitem}
+\usepackage{nth}
+\usepackage{array}
+\usepackage{tikz}
+\usetikzlibrary{arrows,automata}
+\tikzset{
+  saveuse path/.code 2 args={
+    \pgfkeysalso{#1/.style={insert path={#2}}}%
+    \global\expandafter\let\csname pgfk@\pgfkeyscurrentpath/.@cmd\expandafter\endcsname
+      % not optimal as it is now global through out the document
+                           \csname pgfk@\pgfkeyscurrentpath/.@cmd\endcsname
+    \pgfkeysalso{#1}},
+  /pgf/math set seed/.code=\pgfmathsetseed{#1}}
+\usepackage{nicefrac}
+\usepackage{pgfplots}
+\newcommand{\enth}{$n$th}
+\newcommand{\Rl}{\mathbb{R}}
+\newcommand{\Cx}{\mathbb{C}}
+\newcommand{\sgn}[1]{\text{sgn}\qty[#1]}
+\newcommand{\ran}[1]{\text{ran}\qty[#1]}
+\newcommand{\E}{\varepsilon}
+\newcommand{\qiq}{\qquad \implies \qquad}
+\newcommand{\half}{\nicefrac{1}{2}}
+\newcommand{\third}{\nicefrac{1}{3}}
+\newcommand{\quarter}{\nicefrac{1}{4}}
+\newcommand{\f}[3]{#1\ :\ #2 \rightarrow #3}
+\newcommand{\Dx}{\Delta x}
+\newcommand{\Dt}{\Delta t}
+\newcommand{\hot}{\text{h.o.t.}}
+\newcommand{\centdiff}{\frac{u_j^{n+1} - u_j^n}{\Dt}}
+
+\newcommand{\tridsym}[3]{
+    \qty(\begin{array}{ccccc}
+                    #1 & #2 & & & \\
+                    #3 & #1 & #2 & & \\
+                    & \ddots & \ddots & \ddots &  \\
+                    & & #3 & #1 & #2 \\
+                    & & & #3 & #1
+                \end{array})
+}
+
+
+\DeclareMathOperator*{\esssup}{\text{ess~sup}}
+
+\title{MAT 228B Notes}
+\author{Sam Fleischer}
+\date{February 3, 2016}
+
+\begin{document}
+    \maketitle
+
+    \section{Why was Crank Nicolson Bad for $u_t = u_{xx}$ with $u(0,x) = \mathcal{X}_{[0,0.5]}(x)$?}
+
+        For $y' = \lambda y$, you get $y^{n+1} = R(z)y^n$.  With trapezoidal rule, you get $R(z) = \dfrac{1 + \frac{z}{2}}{1 - \frac{z}{2}}$.  With backward Euler, you get $R(z) = \dfrac{1}{1 - z}$.  Both of these methods are A-Stable, which means $\abs{R(z)} < 1$ for all $z = a + bi$ with $a < 0$ (left half-plane).
+
+        \subsection{What happens as $z \rightarrow -\infty$ along the real axis?}
+
+            The Trapezoidal rule: $R(z) \rightarrow -1$.  Backward Euler $R(z) \rightarrow 0$.  This is saying, for large $-\lambda$, the trapezoidal rule gives slowly damped oscillations.  Backward Euler gives quickly damped solutions without oscillations (rapid monotonic decay to $0$).  The behavior of the Backward Euler method matches the behavior of the ODE.
+
+            Both BE and TR are A-Stable, i.e.~$R(z) < 1$ for all $z$ in the left half plane.  BE is also L-stable (if A-stable and $\abs{R(z)} \rightarrow 0$ as $z \rightarrow \infty$).
+
+        \subsection{So,}
+
+            Using CN on $u_t = u_{xx}$ with step function initial condition.. use
+            \begin{align*}
+                \frac{\dd u}{\dd t} = Lu
+            \end{align*}
+            The eigenvalues of $L$ are $\lambda_k = \frac{2D}{\Dx^2}\qty(\cos(k\pi\Dx) - 1)$.  How big are these eigenvalues?  For $k$ small, 
+            \begin{align*}
+                \lambda_k = -k^2\pi^2D + \order{\Dx^2}
+            \end{align*}
+            These agree with the continuous operator.  For $k$ large,
+            \begin{align*}
+                \lambda_k \approx -\frac{4D}{\Dx^2} \rightarrow \infty \text{ as } \Dx \rightarrow 0.
+            \end{align*}
+            Large $k$ give $z_k = \Dt \lambda_k \approx -\frac{4D\Dt}{\Dx^2}$.  We could refine the time scale, but then we might as well use an explicit method.
+
+            The eigenvectors are ${}^kv_j = \sin(k\pi x_j)$.
+
+            For discontinuous initial data, the Fourier coefficients decay like $\frac{1}{k}$.  For Crank-Nicolson, $u^{n+1} = Bu^n + b$, and $\mu_k = \dfrac{1 + \frac{\lambda_k\Dt}{2}}{1 - \frac{\lambda_k\Dt}{2}}$ where $\lambda_k$ are the eigenvalues of the Laplacian.
+
+            $\boxed{\text{If you are expecting sharp frons, don't use CN.}}$  Backward Euler is OK, but it is only 1st order accurate.  You could use BDF2 - it is second order and L-stable.  It is the same work, but more storage, but storage is not usually a big deal.
+
+    \section{TR-BDF2}
+
+        This is diagonally implicit RK, 2-stage, and L-stable.  The first step is half-step trapezoidal rule.  The second step is BDF2 on the initial and half-step.
+        \begin{align*}
+            u^* &= u^n + \frac{\Dt}{4}\qty(f(u^n) + f(u^*)) \\
+            u^{n+1} &= \frac{1}{3} \qty(4u^* - u^n + \Dt g(u^{n+1}))
+        \end{align*}
+\end{document}
+
+
+
+
+
+
+
+
+
+
+
+

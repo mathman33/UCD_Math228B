@@ -1,0 +1,171 @@
+\documentclass{article}
+
+
+\usepackage[margin=0.6in]{geometry}
+\usepackage{amssymb, amsmath, amsfonts}
+\usepackage{tabularx}
+\usepackage{arydshln}
+\usepackage{mathtools}
+\usepackage{changepage}
+\usepackage{asymptote}
+\usepackage{cancel}
+\usepackage{physics}
+\usepackage{pgf}
+\usepackage{enumerate}
+\usepackage{placeins}
+\usepackage{enumitem}
+\usepackage{nth}
+\usepackage{array}
+\usepackage{tikz}
+\usetikzlibrary{arrows,automata}
+\tikzset{
+  saveuse path/.code 2 args={
+    \pgfkeysalso{#1/.style={insert path={#2}}}%
+    \global\expandafter\let\csname pgfk@\pgfkeyscurrentpath/.@cmd\expandafter\endcsname
+      % not optimal as it is now global through out the document
+                           \csname pgfk@\pgfkeyscurrentpath/.@cmd\endcsname
+    \pgfkeysalso{#1}},
+  /pgf/math set seed/.code=\pgfmathsetseed{#1}}
+\usepackage{nicefrac}
+\usepackage{pgfplots}
+\newcommand{\enth}{$n$th}
+\newcommand{\Rl}{\mathbb{R}}
+\newcommand{\Cx}{\mathbb{C}}
+\newcommand{\sgn}[1]{\text{sgn}\qty[#1]}
+\newcommand{\ran}[1]{\text{ran}\qty[#1]}
+\newcommand{\E}{\varepsilon}
+\newcommand{\qiq}{\qquad \implies \qquad}
+\newcommand{\half}{\nicefrac{1}{2}}
+\newcommand{\third}{\nicefrac{1}{3}}
+\newcommand{\quarter}{\nicefrac{1}{4}}
+\newcommand{\f}[3]{#1\ :\ #2 \rightarrow #3}
+\newcommand{\Dx}{\Delta x}
+\newcommand{\Dt}{\Delta t}
+\newcommand{\hot}{\text{h.o.t.}}
+\newcommand{\centdiff}{\frac{u_j^{n+1} - u_j^n}{\Dt}}
+
+\newcommand{\tridsym}[3]{
+    \qty(\begin{array}{ccccc}
+                    #1 & #2 & & & \\
+                    #3 & #1 & #2 & & \\
+                    & \ddots & \ddots & \ddots &  \\
+                    & & #3 & #1 & #2 \\
+                    & & & #3 & #1
+                \end{array})
+}
+
+
+\DeclareMathOperator*{\esssup}{\text{ess~sup}}
+
+\title{MAT 228B Notes}
+\author{Sam Fleischer}
+\date{February 6, 2016}
+
+\begin{document}
+    \maketitle
+
+    \section{Von Neumann Analysis}
+
+        \begin{itemize}
+            \item This is relatively easy for one-step methods (includes only $u^n$ and $u^{n+1}$)
+            \item Assume $u_j^n = e^{i\xi x_j}$ (assume you have an eigenvector).
+            \item Then $u_j^{n+1} = g(\xi)e^{i\xi x_j}$.
+            \item And we want $\abs{g(\xi)} \leq 1 + \alpha\Dt$ for all $\xi$.
+            \item 
+            \begin{align*}
+                u_j^{n+1} &= u_j^n + \frac{\Dt D}{\Dx^2}\qty(u_{j-1}^n - 2u_j^n + _{j+1}^n) \\
+                u_j^{n+1} &= e^{i\xi x_j} + \frac{\Dt D}{\Dx^2}\qty(e^{-i\xi\qty(x_j - \Dx)} - 2e^{i\xi x_j} + e^{i\xi \qty(x_j + \Dx)}) \\
+                &= \qty(1 + \frac{\Dt D}{\Dx^2}\qty(e^{-i\xi \Dx} - 2 + e^{i\xi\Dx}))e^{i\xi x_j}
+            \end{align*}
+        \end{itemize}
+
+    \section{Show the Leapfrog Scheme is Unstable for Diffusion}
+
+        \begin{itemize}
+            \item \begin{align*}
+                \frac{u_j^{n+1} - u_j^{n-1}}{2\Dt} = \frac{D}{\Dx^2}\qty(u_{j-1}^n - 2u_j^n + u_{j+1}^n)
+            \end{align*}
+            \item Assume $u_j^n = g^ne^{i\xi x_j}$.
+            \item We get
+            \begin{align*}
+                \frac{g^{n+1} - g^{n-1}}{2\Dt} = \frac{D}{\Dx^2}g^n\qty(-4\sin^2\qty(\frac{\xi\Dx}{2}))
+            \end{align*}
+            \item This is a recursion relation for the amplification factor.  Dividing by $g^{n-1}$ gives
+            \begin{align*}
+                g^2 - 1 = -\underbrace{\frac{8D\Dt}{\Dx^2}\sin^2\qty(\frac{\xi\Dx}{2})}_\text{define this to be $\beta(\xi)$}g
+            \end{align*}
+            and we can do this because $g = 0$ automatically gives stability ($\abs{g(\xi)} \leq 1 + \alpha\Dt$).
+            \item We know $\beta \geq 0$ for all $\xi$.  And the product of the roots $g_1$ and $g_2$, $g_1g_2 = -1$.  So if one of the roots is close to $0$, then one is far from $0$.
+            \item Calculating the roots of $g^2 + \beta(\xi)g - 1 = 0$ gives
+            \begin{align*}
+                g_{+/-} = \frac{1}{2} \qty(-\beta \pm\qty(\beta^2 + 4)^\frac{1}{2})
+            \end{align*}
+            \item In particular, we see
+            \begin{align*}
+                g_- = \frac{1}{2}\qty(-\beta - \qty(\beta^2 + 4)^\frac{1}{2})
+            \end{align*}
+            In particular, $\abs{g_-} > 1$ for $\beta \neq 0$.
+        \end{itemize}
+
+    \section{Forced Diffusion}
+
+        \begin{itemize}
+            \item $u_t = b u_{xx} + f$.
+            \item Forward Euler presents a timestep restriction.. in 1D, $\Dt \leq \frac{\Dx^2}{2b}$.
+            \item We can write
+            \begin{align*}
+                u_j^{n+1} = \frac{b\Dt}{\Dx^2}u_{j-1}^n + \qty(1 - \frac{2b\Dt}{\Dx^2})u_j^n + \frac{b\Dt}{\Dx^2}u_{j+1}^n
+            \end{align*}
+            \item In the $\infty$-norm analyis, we wanted the diagonal terms to be $\geq 0$....
+            \item In 2D, $\Dt \leq \frac{\Dx^2}{4b}$.
+            \item In 3D, $\Dt \leq \frac{\Dx^2}{6b}$.
+            \item This is because 4 and 6 nearest neighbors in 2 and 3D, respectively.
+            \item In practice, we generally use an implicit time method to avoid these restrictions.
+            \item Let $L$ be the discrete Laplacian.  Then
+            \begin{align*}
+                \frac{u^{n+1} - u^n}{\Dt} = \frac{b}{2}\qty(Lu^n + Lu^{n+1}) + f^{n+\frac{1}{2}} \\
+                \implies \qty(I - \frac{d\Dt}{2}L)u^{n+1} = \qty(I + \frac{d\Dt}{2}L)u^n + \Dt f^{n+\frac{1}{2}}
+            \end{align*}
+            \item We need to solve a linear system each time step.. accounting (how much work)?
+            \begin{itemize}
+                \item Grid spacing $\Dx \propto \frac{1}{N}$.
+                \item Assume $\Dt \propto \Dx$ in the implicit method.
+                \item We have to take $\order{\frac{1}{\Dx}} = \order{N}$ timesteps.
+                \item Cost per timestep (1D)?  Since the matrix is tri-diagonal and diagonally dominant, it's just $\order{N}$ per step.
+            \end{itemize}
+            \item So the cost of the implicit method is $\order{N^2}$.
+            \item What about Forward Euler?
+            \begin{itemize}
+                \item The number of timesteps $\propto \frac{T}{\Dt} = \order{\frac{1}{\Dx^2}} = \order{N^2}$.
+                \item Work per timestep?  It's $\order{N}$ (since it's multiplication by a known sparse, tridiagonal matrix)
+            \end{itemize}
+            \item So the total work is $\order{N^3}$.  So asymptotically, Forward Euler is more expensive.
+            \item Using sparse solvers and sparse matrix arithmetic makes all the difference!
+        \end{itemize}
+
+    \section{Next Time?}
+
+        \begin{itemize}
+            \item $u_t = -ku_{xxxx}$
+            \item Came up in Bob's research about thin filaments (bending structures) in viscous fluids.
+            \item Through the Von Neumann Analysis, you get
+            \begin{align*}
+                \Dt \leq C \Dx^4 \qquad \text{for stability}
+            \end{align*}
+            \item The work for Crank Nicolson is the same.. requires $\order{N^2}$ steps.
+            \item The explicit time, though, requires $\order{N^5}$ steps.
+        \end{itemize}
+
+\end{document}
+
+
+
+
+
+
+
+
+
+
+
+

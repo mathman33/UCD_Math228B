@@ -1,0 +1,156 @@
+\documentclass{article}
+
+
+\usepackage[margin=0.6in]{geometry}
+\usepackage{amssymb, amsmath, amsfonts}
+\usepackage{tabularx}
+\usepackage{arydshln}
+\usepackage{mathtools}
+\usepackage{changepage}
+\usepackage{asymptote}
+\usepackage{cancel}
+\usepackage{physics}
+\usepackage{pgf}
+\usepackage{enumerate}
+\usepackage{placeins}
+\usepackage{enumitem}
+\usepackage{nth}
+\usepackage{array}
+\usepackage{tikz}
+\usetikzlibrary{arrows,automata}
+\tikzset{
+  saveuse path/.code 2 args={
+    \pgfkeysalso{#1/.style={insert path={#2}}}%
+    \global\expandafter\let\csname pgfk@\pgfkeyscurrentpath/.@cmd\expandafter\endcsname
+      % not optimal as it is now global through out the document
+                           \csname pgfk@\pgfkeyscurrentpath/.@cmd\endcsname
+    \pgfkeysalso{#1}},
+  /pgf/math set seed/.code=\pgfmathsetseed{#1}}
+\usepackage{nicefrac}
+\usepackage{pgfplots}
+\newcommand{\enth}{$n$th}
+\newcommand{\Rl}{\mathbb{R}}
+\newcommand{\Cx}{\mathbb{C}}
+\newcommand{\sgn}[1]{\text{sgn}\qty[#1]}
+\newcommand{\ran}[1]{\text{ran}\qty[#1]}
+\newcommand{\E}{\varepsilon}
+\newcommand{\qiq}{\qquad \implies \qquad}
+\newcommand{\half}{\nicefrac{1}{2}}
+\newcommand{\third}{\nicefrac{1}{3}}
+\newcommand{\quarter}{\nicefrac{1}{4}}
+\newcommand{\f}[3]{#1\ :\ #2 \rightarrow #3}
+\newcommand{\Dx}{\Delta x}
+\newcommand{\Dt}{\Delta t}
+\newcommand{\hot}{\text{h.o.t.}}
+\newcommand{\centdiff}{\frac{u_j^{n+1} - u_j^n}{\Dt}}
+
+\newcommand{\tridsym}[3]{
+    \qty(\begin{array}{ccccc}
+                    #1 & #2 & & & \\
+                    #3 & #1 & #2 & & \\
+                    & \ddots & \ddots & \ddots &  \\
+                    & & #3 & #1 & #2 \\
+                    & & & #3 & #1
+                \end{array})
+}
+
+
+\DeclareMathOperator*{\esssup}{\text{ess~sup}}
+
+\title{MAT 228B Notes}
+\author{Sam Fleischer}
+\date{February 6, 2016}
+
+\begin{document}
+    \maketitle
+
+    \section{Implicit-Time methods in Multi-D}
+
+        $u_t = b \laplacian u$.  Crank-Nicolson is
+        \begin{align*}
+            \qty(I - \frac{\Dt b}{2}L)u^{n+1} = \qty(I + \frac{\Dt b}{2}L)u^n
+        \end{align*}
+        Backward Euler is
+        \begin{align*}
+            \qty(I - \Dt b L)u^{n+1} = u^n
+        \end{align*}
+        BDF-2 is
+        \begin{align*}
+            \qty(I - \frac{2}{3}\Dt L)u^{n+1} = \text{stuff}
+        \end{align*}
+        so the inversion is pretty similar for BDF-1,2,3,etc.  We have to solve
+        \begin{align*}
+            \qty(I - \beta\Dt L)u^{n+1} = r
+        \end{align*}
+        every timestep.  Direct-solve (Gaussian elimination) is expensive.  We can use iterative methods like SOR, Multigrid, PCG.  Or we can use some specialized direct methods like Block-Cyclic Reduction or FFT method (both of these require structure and constant coefficients).  Asymptotically, MG and FFT are the best.  MG has more overhead, but is more general.
+
+        \subsection{How well do the iterative methods work?}
+            The condition number of $L$ is $\order{1}{\Dx^2}$.  This is pretty bad.. the bigger the condition number, the slower the convergence (PCG).  Let $A = I - \beta\Dt L$.  We can really just look at $\beta\Dt L$.  Then $\kappa(A) = \order{\frac{\Dt}{\Dx^2}}$ (remember $\kappa(A)$ is notation for the condition number of $A$).  If $\Dt = \order{\Dx}$, then $\kappa(A) = \order{\frac{1}{\Dx}}$.
+
+            So, all of these methods will work one order of magnitude faster than they do for the Poisson equation.
+
+            The actual convergence rate depends on the size of $\frac{\beta\Dt}{\Dx^2}$.  Two extreme cases:
+            \begin{itemize}
+                \item $\frac{\beta\Dt}{\Dx^2} \rightarrow 0$
+                \item $\frac{\beta\Dt}{\Dx^2} \rightarrow \infty$
+            \end{itemize}
+            For Backward Euler ($\beta = b$),
+            \begin{align*}
+                (I - \Dt bL)u^{n+1} = u^n + \Dt f^{n+1}.
+            \end{align*}
+            If $f$ contains boundary conditions, then we expect $f = \order{\frac{1}{\Dx^2}}$.
+            \begin{itemize}
+                \item If $\frac{\beta\Dt}{\Dx^2} \rightarrow 0$, then $A \rightarrow I$ and the iterative methods converge very fast.
+                \item If $\frac{\beta\Dt}{\Dt^2} \rightarrow \infty$, then $A \rightarrow -\beta\Dt L$.  In that limit, the equations look like
+                \begin{align*}
+                    -\Dt b L u^{n+1} = \Dt f^{n+1}
+                \end{align*}
+                This is a discrete Poisson equation.  So the worst case scenario is that the iterative methods work better (converge faster) than they do for the Poisson equation.
+            \end{itemize}
+            A Multigrid solver on a $64^2$ periodic domain has convergence factor for the Poisson equation is $\rho \approx 0.16$.  Then the number of iterations per digit accuracy is $-\frac{1}{\log_{10}\rho} \approx 1.26$.
+
+        \subsection{Results for Various $\beta$s}
+            $(I - \Dt\beta L)$:
+            \begin{align*}
+                \begin{array}{||l|l|l|l||}
+                    \beta = 1 & \rho \approx 0.11 & -\frac{1}{\log_{10}\rho} \approx 1.04 & \text{20\% fewer iterations} \\\hline
+                    \beta = 0.1 & \rho \approx 0.05 & -\frac{1}{\log_{10}\rho} \approx 0.77 & \text{40\% fewer iterations}
+                \end{array}
+            \end{align*}
+            and this is with $\Dt = \Dx$.  Then $\frac{\beta\Dt}{\Dx^2} = \frac{\beta}{\Dx} = \frac{\beta}{64}$ if the grid is $64^2$.
+
+            We actually might do better than this since time-dependent problems give us an initial guess for each step.  We'll take $\qty(u^{n+1})^0 = u^n$, i.e.~the initial guess on the $(n+1)$th timestep is the $n$th timestep.
+
+    \section{Exploiting the Time-Dependencies of the Heat Equation}
+        There is another way to solve the equation, which was not available for the Poisson equation because it was time-independent.
+        \begin{itemize}
+            \item ADI scheme (Alternating Direction, Implicit)
+            \item LOD scheme (Locally One-Dimensional), which is good for structured grids only.. not often used in practice.
+        \end{itemize}
+
+        Exploiting the Laplacian in 2D, $\laplacian u = u_{xx} + u_{yy}$, i.e.~$L = L_x + L_y$.  Intuitively, we diffuse in each dimension sequentially.
+
+        Crank-Nicolson is
+        \begin{align*}
+            \qty(I - \frac{b\Dt}{2}L_x - \frac{d\Dt}{2}L_y)u^{n+1} = \qty(I + \frac{b\Dt}{2}L_x + \frac{d\Dt}{2}L_y)u^n
+        \end{align*}
+        So, sequentially, the LOD scheme is
+        \begin{align*}
+            \qty(I - \frac{b\Dt}{2}L_x)u^* = \qty(I + \frac{b\Dt}{2}L_x)u^n, \qquad\text{followed by}\qquad\qty(I - \frac{b\Dt}{2}L_y)u^{n+1} = \qty(I + \frac{b\Dt}{2}L_y)u^*
+        \end{align*}
+        It turns out this is pretty reasonable.  The LOD scheme looks like a fractional stepping method.  The ``half'' step is in the $x$ direction.  The ``full'' step is that, followed by the step in the $y$ direction.  In fractional stepping methods, we ignore part of the ODE in each fractional step.. not like RK.
+
+
+\end{document}
+
+
+
+
+
+
+
+
+
+
+
+

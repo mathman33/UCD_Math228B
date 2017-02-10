@@ -1,0 +1,168 @@
+\documentclass{article}
+
+
+\usepackage[margin=0.6in]{geometry}
+\usepackage{amssymb, amsmath, amsfonts}
+\usepackage{tabularx}
+\usepackage{arydshln}
+\usepackage{mathtools}
+\usepackage{changepage}
+\usepackage{asymptote}
+\usepackage{cancel}
+\usepackage{physics}
+\usepackage{pgf}
+\usepackage{enumerate}
+\usepackage{placeins}
+\usepackage{enumitem}
+\usepackage{nth}
+\usepackage{array}
+\usepackage{tikz}
+\usetikzlibrary{arrows,automata}
+\tikzset{
+  saveuse path/.code 2 args={
+    \pgfkeysalso{#1/.style={insert path={#2}}}%
+    \global\expandafter\let\csname pgfk@\pgfkeyscurrentpath/.@cmd\expandafter\endcsname
+      % not optimal as it is now global through out the document
+                           \csname pgfk@\pgfkeyscurrentpath/.@cmd\endcsname
+    \pgfkeysalso{#1}},
+  /pgf/math set seed/.code=\pgfmathsetseed{#1}}
+\usepackage{nicefrac}
+\usepackage{pgfplots}
+\newcommand{\enth}{$n$th}
+\newcommand{\Rl}{\mathbb{R}}
+\newcommand{\Cx}{\mathbb{C}}
+\newcommand{\sgn}[1]{\text{sgn}\qty[#1]}
+\newcommand{\ran}[1]{\text{ran}\qty[#1]}
+\newcommand{\E}{\varepsilon}
+\newcommand{\qiq}{\qquad \implies \qquad}
+\newcommand{\half}{\nicefrac{1}{2}}
+\newcommand{\third}{\nicefrac{1}{3}}
+\newcommand{\quarter}{\nicefrac{1}{4}}
+\newcommand{\f}[3]{#1\ :\ #2 \rightarrow #3}
+\newcommand{\Dx}{\Delta x}
+\newcommand{\Dy}{\Delta y}
+\newcommand{\Dt}{\Delta t}
+\newcommand{\hot}{\text{h.o.t.}}
+\newcommand{\centdiff}{\frac{u_j^{n+1} - u_j^n}{\Dt}}
+
+\newcommand{\tridsym}[3]{
+    \qty(\begin{array}{ccccc}
+                    #1 & #2 & & & \\
+                    #3 & #1 & #2 & & \\
+                    & \ddots & \ddots & \ddots &  \\
+                    & & #3 & #1 & #2 \\
+                    & & & #3 & #1
+                \end{array})
+}
+
+
+\DeclareMathOperator*{\esssup}{\text{ess~sup}}
+
+\title{MAT 228B Notes}
+\author{Sam Fleischer}
+\date{February 10, 2017}
+
+\begin{document}
+    \maketitle
+
+    \section{Last Time}
+        \begin{itemize}
+            \item Laplacian in 2D: $\laplacian u = u_{xx} + u_{yy}\qquad L = L_x + L_y$.
+            \item LOD method.. think about as a fractional stepping approach
+            \item Method of lines: $\frac{\dd u}{\dd t} = L_x u + L_y u$.  Solve $\frac{\dd u}{\dd t} = L_xu$ and then $\frac{\dd u}{\dd t} = L_yu$.
+        \end{itemize}
+
+    \section{ADI (class of) Schemes}
+        \begin{itemize}
+            \item This is another approach ``Alternating Direction Implicit''
+            \item For $2D$ diffusion, a common (Peaceman-Rachford) ADI scheme is
+            \begin{align*}
+                \qty(I - \frac{d\Dt}{2}L_x)u^* = \qty(I + \frac{d\Dt}{2}L_y)u^n
+            \end{align*}
+            \item Kind of looks like Crank Nicolson.. but $y$ explicit and $x$ implicit at the same time (for the intermediate step)
+            \item The follow this up with the secondary step:
+            \begin{align*}
+                \qty(I - \frac{d\Dt}{2}L_y)u^{n+1} = \qty(I + \frac{d\Dt}{2}L_x)u^*.
+            \end{align*}
+            \item What is the work?
+            \begin{itemize}
+                \item Step 1: solve $N_y$ tridiagonal systems of size $N_x$ (work is $\order{N_xN_y} = \order{N}$, which is optimal, ($N$ is the number of gridpoints in $2D$))
+                \item Step 2:solve $N_x$ tridiagonal systems of size $N_y$ (work is $\order{N_xN_y} = \order{N}$)
+                \item So the total work is $\order{N}$.
+            \end{itemize}
+            \item Is it stable?
+            \begin{itemize}
+                \item Doing the discrete Fourier transform gives
+                \begin{align*}
+                    \qty(1 + 2b\Dt\sin^2(\frac{\xi_1\Dx}{2}))\hat{u^*} &= \qty(1 - 2b\Dt\sin^2(\frac{\xi_2\Dy}{2}))\hat{u^n} \\
+                    \qty(1 + 2b\Dt\sin^2(\frac{\xi_1\Dy}{2}))\hat{u^{n+1}} &= \qty(1 - 2b\Dt\sin^2(\frac{\xi_2\Dx}{2}))\hat{u^*}
+                \end{align*}
+                \item Solving this gives
+                \begin{align}
+                    \hat{u^{n+1}} = \underbrace{\frac{\qty(1 - 2b\Dt\sin^2(\frac{\xi_1\Dx}{2}))\qty(1 - 2b\Dt\sin^2(\frac{\xi_2\Dy}{2}))}{\qty(1 + 2b\Dt\sin^2(\frac{\xi_2\Dy}{2}))\qty(1 + 2b\Dt\sin^2(\frac{\xi_2\Dx}{2}))}}_{g(\xi_1,\xi_2)}\hat{u^n}
+                \end{align}
+                \item Note that $g(\xi_1,\xi_2) = g_1(\xi_1)g_2(\xi_2)$ where $g_1$ and $g_2$ are the ampification factors of Crank-Nicolson.
+                \item So, $\abs{g(\xi_1,\xi_2)} = \abs{g_1(\xi_1)}\cdot\abs{g_2(\xi_2)} \leq 1$, so it is unconditionally stable.
+            \end{itemize}
+            \item Is it consistent?
+            \begin{itemize}
+                \item Multiply first equation by $\qty(I + \frac{b\Dt}{2}L_x)$, so.
+                \begin{align}
+                    \underbrace{\qty(I + \frac{b\Dt}{2}L_x)\qty(I - \frac{b\Dt}{2}L_x)}_{\text{these commute}}u^* = \qty(I + \frac{b\Dt}{2}L_x)\qty(I + \frac{b\Dt}{2}L_y)u^n
+                \end{align}
+                \item So,
+                \begin{align}
+                    \qty(I - \frac{b\Dt}{2}L_x)\qty(I + \frac{b\Dt}{2}L_x)u^* = \qty(I + \frac{b\Dt}{2}L_x)\qty(I + \frac{b\Dt}{2}L_y)u^n
+                \end{align}
+                \item Then we eliminate $u^*$ by using the second step of the scheme.
+                \begin{align}
+                    \qty(I - \frac{b\Dt}{2}L_x)\qty(I - \frac{b\Dt}{2}L_y)u^{n+1} = \qty(I + \frac{b\Dt}{2}L_x)\qty(I + \frac{b\Dt}{2}L_y)u^n
+                \end{align}
+                \item Expanding this gives
+                \begin{align}
+                    \qty(I - \frac{b\Dt}{2}L_x - \frac{b\Dt}{2}L_y + \frac{b^2\Dt^2}{4}L_xL_y)u^{n+1} = \qty(I + \frac{b\Dt}{2}L_x + \frac{b\Dt}{2}L_y + \frac{b^2\Dt^2}{4}L_xL_y)u^n
+                \end{align}
+                \item So this is a small perturbation of Crank-Nicolson.
+                \begin{align}
+                    \underbrace{\qty(I - \frac{b\Dt}{2}L)u^{n+1} = \qty(I + \frac{b\Dt}{2}L)u^n}_\text{Crank-Nicolson, where $L$ is the discrete 2D Laplacian} - \frac{b^2\Dt^2}{4}L_xL_y\qty(u^{n+1} - u^n)
+                \end{align}
+                \item So,
+                \begin{align}
+                    \frac{u^{n+1} - u^n}{\Dt} = \frac{b}{2}Lu^n + \frac{b}{2}Lu^{n+1} - \frac{b^2\Dt^2}{4}L_xL_y\qty(\frac{u^{n+1} - u^n}{\Dt})
+                \end{align}
+                \item How big is this (do a Taylor Series)?
+                \item We know plugging in the solution to the PDE into
+                \begin{align}
+                    \frac{u^{n+1} - u^n}{\Dt} = \frac{b}{2}Lu^n + \frac{b}{2}Lu^{n+1}
+                \end{align}
+                gives us LTE for CN (which is second-order).
+                \item In the limit of $\Dt,\Dx \rightarrow 0$,
+                \begin{align}
+                    \Dt^2L_xL_y\qty(\frac{u^{n+1} - u^n}{\Dt}) \rightarrow \Dt^2\frac{\partial^5}{\partial y^2\partial x^2 \partial t}u
+                \end{align}
+                \item These extra terms contribute $\order{\Dt^2}$ to the truntation error in addition to the LTE of CN.
+            \end{itemize}
+            \item Thus, the Lax Equivalence Theorem says this is convergent.  It is second-order in space and time and unonditionally stabl $\order{N}$ work per timestep.
+            \item What are the boundary conditions shoud hold for $u^*$?
+            \begin{itemize}
+                \item The first step is Forward Euler in $y$ direction for half a timestep, and
+                \item Backward Euler in the $x$ direction for half a timestep.
+                \item It's a consistent discretization of the PDE to take step length $\frac{\Dt}{2}$.
+                \item So, $u^* = u^{n+\half} + \order{\Dt^2}$.
+                \item This means the single-step error in Forward or Backward Euler is $\order{\Dt^2}$.
+            \end{itemize}
+        \end{itemize}
+
+\end{document}
+
+
+
+
+
+
+
+
+
+
+
+

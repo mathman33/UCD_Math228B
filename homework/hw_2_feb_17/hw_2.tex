@@ -1,0 +1,353 @@
+\documentclass{article} % A4 paper and 11pt font size
+\setcounter{secnumdepth}{0}
+
+\usepackage{amssymb, amsmath, amsfonts}
+\usepackage{moreverb}
+\usepackage{multicol}
+\usepackage{graphicx}
+\usepackage{enumerate}
+\usepackage{changepage}
+\usepackage{lipsum}
+\usepackage{caption}
+\usepackage{nicefrac}
+\usepackage{graphics}
+\usepackage[margin=1in]{geometry}
+\usepackage{tocloft}
+\renewcommand{\cftsecleader}{\cftdotfill{\cftdotsep}}
+\usepackage{array}
+\usepackage{arydshln}
+\usepackage{float}
+\usepackage{subcaption}
+\usepackage{csquotes}
+\usepackage{placeins}
+\usepackage{verbatim}
+\usepackage{hyperref}
+\usepackage{textcomp}
+\usepackage[makeroom]{cancel}
+\usepackage{bbold}
+\usepackage{scrextend}
+\usepackage{alltt}
+\usepackage[utf8]{inputenc}
+\usepackage{listings}
+\usepackage{color}
+\usepackage{physics}
+\usepackage{mathtools}
+\usepackage[normalem]{ulem}
+\usepackage{amsthm}
+\usepackage{tikz}
+\usetikzlibrary{positioning}
+\usetikzlibrary{arrows}
+\usepackage{pgfplots}
+\usepackage{bigints}
+\allowdisplaybreaks
+\pgfplotsset{compat=1.12}
+
+\theoremstyle{plain}
+\newtheorem*{theorem*}{Theorem}
+\newtheorem{theorem}{Theorem}
+\newtheorem*{lemma*}{Lemma}
+\newtheorem{lemma}{Lemma}
+
+\definecolor{verbgray}{gray}{0.9}
+% \definecolor{dkgreen}{green}{0.9}
+
+\lstdefinestyle{PythonCode}{%
+  language=Python,
+  backgroundcolor=\color{verbgray},
+  keywordstyle=\color{blue},      % keyword style
+  keywordstyle=[2]\color{blue},   % keyword style
+  commentstyle=\color{magenta},   % comment style
+  stringstyle=\color{olive},      % string literal styleframe=single,
+  numberstyle=\color{black},      % string literal styleframe=single,
+  framerule=0pt,
+  numbers=left,
+  stepnumber=1,
+  firstnumber=1,
+  showspaces=false,
+  basicstyle=\ttfamily}
+
+\lstset{style=PythonCode}
+
+\makeatletter
+\newcommand{\BIGG}{\bBigg@{3}}
+\newcommand{\vast}{\bBigg@{4}}
+\newcommand{\Vast}{\bBigg@{5}}
+\makeatother
+
+\newenvironment{definition}[1][Definition]{\begin{trivlist}
+\item[\hskip \labelsep {\bfseries #1}]}{\end{trivlist}}
+
+\newcommand{\dy}{\partial_y}
+\newcommand{\dyy}{\partial_{yy}}
+\newcommand{\dxx}{\partial_{xx}}
+\newcommand{\dxy}{\partial_{xy}}
+\newcommand{\dyyy}{\partial_{yyy}}
+\newcommand{\dxxx}{\partial_{xxx}}
+\newcommand{\dx}{\partial_x}
+\newcommand{\E}{\varepsilon}
+\def\Rl{\mathbb{R}}
+\def\Cx{\mathbb{C}}
+
+\newcommand{\Ei}{\text{Ei}}
+
+\usepackage[T1]{fontenc} % Use 8-bit encoding that has 256 glyphs
+\usepackage{fourier} % Use the Adobe Utopia font for the document - comment this line to return to the LaTeX default
+\usepackage[english]{babel} % English language/hyphenation
+
+\usepackage{sectsty} % Allows customizing section commands
+\allsectionsfont{\centering \normalfont\scshape} % Make all sections centered, the default font and small caps
+
+\usepackage{fancyhdr} % Custom headers and footers
+\pagestyle{fancy} % Makes all pages in the document conform to the custom headers and footers
+\fancyhead[L]{\bf Sam Fleischer}
+\fancyhead[C]{\bf UC Davis \\ Numerical Solutions of Differential Equations (MAT228B)} % No page header - if you want one, create it in the same way as the footers below
+\fancyhead[R]{\bf Winter 2017}
+
+\fancyfoot[L]{\bf } % Empty left footer
+\fancyfoot[C]{\bf \thepage} % Empty center footer
+\fancyfoot[R]{\bf } % Page numbering for right footer
+\renewcommand{\headrulewidth}{0pt} % Remove header underlines
+\renewcommand{\footrulewidth}{0pt} % Remove footer underlines
+\setlength{\headheight}{25pt} % Customize the height of the header
+
+\newcommand{\VEC}[2]{\left\langle #1, #2 \right\rangle}
+\newcommand{\ran}{\text{\rm ran }}
+\newcommand{\Hilb}{\mathcal{H}}
+\newcommand{\lap}{\Delta}
+
+\newcommand{\Dx}{\Delta x}
+\newcommand{\Dt}{\Delta t}
+
+\newcommand{\littleo}[1]{\text{\scriptsize$\mathcal{O}$}\qty(#1)}
+
+\DeclareMathOperator*{\esssup}{\text{ess~sup}}
+
+\newcommand{\problem}[2]{
+\vspace{.375cm}
+\boxed{\begin{minipage}{\textwidth}
+    \section{\bf #1}
+    #2
+\end{minipage}}
+}
+
+\numberwithin{equation}{section} % Number equations within sections (i.e. 1.1, 1.2, 2.1, 2.2 instead of 1, 2, 3, 4)
+\numberwithin{figure}{section} % Number figures within sections (i.e. 1.1, 1.2, 2.1, 2.2 instead of 1, 2, 3, 4)
+\numberwithin{table}{section} % Number tables within sections (i.e. 1.1, 1.2, 2.1, 2.2 instead of 1, 2, 3, 4)
+
+\setlength\parindent{0pt} % Removes all indentation from paragraphs - comment this line for an assignment with lots of text
+
+\newcommand{\horrule}[1]{\rule{\linewidth}{#1}} % Create horizontal rule command with 1 argument of height
+
+\title{ 
+\normalfont \normalsize 
+\textsc{UC Davis, Numerical Solutions of Differential Equations (MAT 228B), Winter 2017} \\ [25pt] % Your university, school and/or department name(s)
+\horrule{2pt} \\[01.4cm] % Thin top horizontal rule
+\Huge Homework \#2 \\ % The assignment title
+\horrule{2pt} \\[0.5cm] % Thick bottom horizontal rule
+}
+
+\author{\huge Sam Fleischer} % Your name
+
+\date{February 17, 2017} % Today's date or a custom date
+
+\begin{document}\thispagestyle{empty}
+
+\maketitle % Print the title
+
+\makeatletter
+\@starttoc{toc}
+\makeatother
+
+\pagebreak
+
+\problem{Problem 1}{Consider the forward time, centered space discretization $$\frac{u_j^{n+1} - u_j^n}{\Dt} + a\frac{u_{j+1}^n - u_{j-1}^n}{2\Dx} = b\frac{u_{j-1}^n - 2u_j^n + u_{j+1}^n}{\Dx^2},$$ to the convection-diffusion equation, $$u_t + au_x = bu_{xx}, \qquad b > 0.$$
+\begin{enumerate}[\ \ (a)]
+    \item Let $\nu = \frac{a\Dt}{\Dx}$ and $\mu = \frac{b\Dt}{\Dx^2}$.  Since the solution to the PDE does not grow in time, it seems reasonable to require that the numerical solution not grow in time.  Use von Neumann analysis to show that the numerical solution does not grow (in 2-norm) if and only if $\nu^2 \leq 2\mu \leq 1$.
+    \item Suppose that we use the mixed implicit-explicit scheme $$\frac{u_j^{n+1} - u_j^n}{\Dt} + a\frac{u_{j+1}^n - u_{j-1}^n}{2\Dx} = b\frac{u_{j-1}^{n+1} - 2u_j^{n+1} + u_{j+1}^{n+1}}{\Dx^2}.$$ Use von Neumann analysis to derive a stability restriction on the time step.
+\end{enumerate}}
+
+\begin{enumerate}[\ \ (a)]
+    \item
+        Using the scheme $$\frac{u_j^{n+1} - u_j^n}{\Dt} + a\frac{u_{j+1}^n - u_{j-1}^n}{2\Dx} = b\frac{u_{j-1}^n - 2u_j^n + u_{j+1}^n}{\Dx^2},$$ set $\nu = \frac{a\Dt}{\Dx}$ and $\mu = \frac{b\Dt}{\Dx^2}$, so
+        \begin{align*}
+            u_j^{n+1} - u_j^n + \frac{\nu}{2}\qty(u_{j+1}^n - u_{j-1}^n) = \mu\qty(u_{j-1}^n - 2u_j^n + u_{j+1}^n)
+        \end{align*}
+        Let $u_j^n = e^{i\xi x_j}$, so $u_j^{n+1} = g(\xi)e^{i\xi x_j}$.  So,
+        \begin{align*}
+            g(\xi)e^{i\xi x_j} - e^{i\xi x_j} + \frac{\nu}{2}e^{i\xi x_j}\qty(e^{i\xi\Dx} - e^{-i\xi\Dx}) &= \mu e^{i\xi x_j}\qty(e^{-i\xi\Dx} - 2 + e^{i\xi\Dx}) \\
+            g(\xi) - 1 + \frac{\nu}{2}\qty(e^{i\xi\Dx} - e^{-i\xi\Dx}) &= \mu \qty(e^{-i\xi\Dx} - 2 + e^{i\xi\Dx})
+        \end{align*}
+        Using the identities $i\sin(x) = \frac{e^{ix} - e^{-ix}}{2}$ and $e^{-ix} - 2 + e^{ix} = -4\sin^2(\frac{x}{2})$, we see
+        \begin{align*}
+            g(\xi) = 1 - i\nu\sin(\xi\Dx) - 4\mu\sin^2\qty(\frac{\xi\Dx}{2})
+        \end{align*}
+        Then using $\sin(x) = 2\sin(\frac{x}{2})\cos(\frac{x}{2})$,
+        \begin{align*}
+            g(\xi) = 1 - 2i\nu\sin(\frac{\xi\Dx}{2})\cos(\frac{\xi\Dx}{2}) - 4\mu\sin^2\qty(\frac{\xi\Dx}{2})
+        \end{align*}
+        Forcing $\abs{g(\xi)}<1$ gives
+        \begin{align*}
+            \abs{\qty(1 - 4\mu\sin^2\qty(\frac{\xi\Dx}{2})) - i\qty(2\nu\sin(\frac{\xi\Dx}{2})\cos(\frac{\xi\Dx}{2}))} &< 1
+        \end{align*}
+        or
+        \begin{align*}
+            \qty(1 - 4\mu\sin^2\qty(\frac{\xi\Dx}{2}))^2 + \qty(2\nu\sin(\frac{\xi\Dx}{2})\cos(\frac{\xi\Dx}{2}))^2 < 1.
+        \end{align*}
+        For ease, define $x = \sin^2\qty(\frac{\xi\Dx}{2})$.
+        \begin{align*}
+            \qty(1 - 4\mu x)^2 + 4\nu^2x(1 - x) < 1
+        \end{align*}
+        First, assume $\nu^2 \leq 2\mu \leq 1$ does not hold.
+        \begin{adjustwidth}{2cm}{2cm}
+            This means either $\nu^2 > 2\mu$ or $2\mu > 1$.  If $2\mu > 1$, then $4\mu > 2$.  Since $x$ ranges from $0$ to $1$, as $x\rightarrow 1$, then $1 - 4\mu x < -1$.  Thus $\qty(1 - 4\mu x)^2 > 1$, which forces $4\nu^2 x(1 - x) < 0$, providing a contradiction.  Thus $2\mu \leq 1$.
+
+            Now assume $\nu^2 > 2\mu$.  Expanding $$\qty(1 - 4\mu x)^2 + 4\nu^2x(1 - x) < 1$$ gives $$1 - 8\mu x + 16\mu^2 x^2 + 4\nu^2x - 4\nu^2x^2 < 1$$ or $$-2\mu x + 4\mu^2 x^2 + \nu^2x - \nu^2x^2 < 0.$$  Factoring $x$ gives $$x\qty(\qty(4\mu^2 - \nu^2)x + 4\qty(\nu^2 - 2\mu)) < 0.$$  Since $\nu^2 > 2\mu$ then $4\qty(\nu^2 - 2\mu) > 0$.  But as $x\rightarrow0^+$, $\qty(4\mu^2 - \nu^2)x \rightarrow 0$, so as $x\rightarrow0^+$, we get
+            \begin{align*}
+                4\qty(\nu^2 - 2\mu) < 0
+            \end{align*}
+            which is a contradiction.  So $\nu^2 \leq 2\mu$.
+        \end{adjustwidth}
+        Next assume $\nu^2 \leq 2\mu \leq 1$.
+        \begin{adjustwidth}{2cm}{2cm}
+            Then
+            \begin{align*}
+                \abs{g(\xi)}^2 &= \qty(1 - 4\mu x)^2 + 4\nu^2x(1-x) \\
+                &\leq \qty(1 - 4\mu x)^2 + 8\mu x(1 - x) & \text{since $\nu^2 \leq 2\mu$} \\
+                &= 1 \cancel{- 8\mu x} + 16 \mu^2 x^2 + \cancel{8\mu x} - 8\mu x^2 & \text{after expansion} \\
+                &= 1 + 8\mu x^2\qty(2\mu - 1) \\
+                &\leq 1 & \text{since $2\mu \leq 1$}
+            \end{align*}
+        \end{adjustwidth}
+        Thus, $\abs{g(\xi)} \leq 1$ if and only if $\nu^2 \leq 2\mu \leq 1$.  Since $\abs{g(\xi)}$ is the amplification factor, $\abs{g(\xi)}<1$ means the numerical solution does not grow in $2$-norm.
+    \item
+        I will prove the numerical solution does not grow in (in 2-norm) if and only if $\nu^2 \leq 2\mu$.  First, we derive the amplification factor $g(\xi)$.
+
+        Using the scheme $$\frac{u_j^{n+1} - u_j^n}{\Dt} + a\frac{u_{j+1}^n - u_{j-1}^n}{2\Dx} = b\frac{u_{j-1}^{n+1} - 2u_j^{n+1} + u_{j+1}^{n+1}}{\Dx^2},$$ set $\nu = \frac{a\Dt}{\Dx}$ and $\mu = \frac{b\Dt}{\Dx^2}$, so
+        \begin{align*}
+            g(\xi)e^{i\xi x_j} - e^{i\xi x_j} + \frac{\nu}{2}e^{i\xi x_j}\qty(e^{i\xi\Dx} - e^{-i\xi\Dx}) &= \mu g(\xi)e^{i\xi x_j}\qty(e^{-i\xi\Dx} - 2 + e^{i\xi\Dx}) \\
+            g(\xi) - 1 + \frac{\nu}{2}\qty(e^{i\xi\Dx} - e^{-i\xi\Dx}) &= \mu g(\xi) \qty(e^{-i\xi\Dx} - 2 + e^{i\xi\Dx})
+        \end{align*}
+        Using the same trigonometric identities as in part (a), we find
+        \begin{align*}
+            g(\xi) - 1 + 2i\sin\nu\sin(\frac{\xi\Dx}{2})\cos(\frac{\xi\Dx}{2}) = -4\mu g(\xi)\sin^2\qty(\frac{\xi\Dx}{2})
+        \end{align*}
+        which can be solved for $g(\xi)$ as
+        \begin{align*}
+            g(\xi) = \frac{1 - 2i\nu\sin(\frac{\xi\Dx}{2})\cos(\frac{\xi\Dx}{2})}{1 + 4\mu\sin^2(\frac{\xi\Dx}{2})}
+        \end{align*}
+        Assume $\abs{g(\xi)}^2 \leq 1$.
+        \begin{adjustwidth}{2cm}{2cm}
+            Then $\abs{g(x)}^2 \leq 1$, or
+            \begin{align*}
+                \abs{\frac{1}{1 + 4\mu\sin^2\qty(\frac{\xi\Dx}{2})} - i\frac{2\nu\sin(\frac{\xi\Dx}{2})\cos(\frac{\xi\Dx}{2})}{1 + 4\mu\sin^2\qty(\frac{\xi\Dx}{2})}}^2 &\leq 1 \\
+                \frac{1}{(1 + 4\mu x)^2} + \frac{4\nu^2 x(1-x)}{\qty(1 + 4\mu x)^2} &\leq 1
+            \end{align*}
+            where $x \coloneqq \sin^2\qty(\frac{\xi\Dx}{2})$.  Thus,
+            \begin{align*}
+                1 + 4\nu^2 x(1-x) &\leq (1 + 4\mu x)^2 \\
+                x\qty(\qty(\nu^2 - 2\mu) + x\qty(-\nu^2 - 4\mu^2)) &\leq 0
+            \end{align*}
+            Since $x$ ranges from $0$ to $1$, as $x \rightarrow 0$, we get the requirement of $\nu^2 - 2\mu \leq 0$, or $\nu^2 \leq 2\mu$.
+        \end{adjustwidth}
+        Now assume $\nu^2 \leq 2\mu$.
+        \begin{adjustwidth}{2cm}{2cm}
+            Then
+            \begin{align*}
+                \abs{g(\xi)}^2  &= \frac{1 + 4\nu^2 x(1 - x)}{(1 + 4\mu x)^2} \\
+                &\leq \frac{1 + 8\mu x(1 - x)}{(1 + 4\mu x)^2} & \text{by assemption} \\
+                & = \frac{1 + 8\mu x - 8 \mu x^2}{1 + 8\mu x + 16 \mu^2 x^2} & \text{after expansion} \\
+                &\leq 1 & \text{since $8\mu x^2 > 0$ and $16\mu^2x^2 > 0$}
+            \end{align*}
+        \end{adjustwidth}
+        Thus, $\abs{g(\xi)}<1$ if and only if $\nu^2 \leq 2\mu$.
+\end{enumerate}
+Notice the subtle difference between the stability conditions for the explicit scheme and the implicit-explicit scheme.  In part (a), we require
+\begin{align*}
+    \nu^2 \leq 2\mu \leq 1 \qquad\iff\qquad \Dt \leq \frac{2b}{a^2} \ \text{ and }\ \Dt \leq \frac{\Dx^2}{2b}
+\end{align*}
+but in part (b) we only require
+\begin{align*}
+    \nu^2 \leq 2\mu \qquad \iff \qquad \Dt \leq \frac{2b}{a^2}
+\end{align*}
+In other words, the implicit-explicit scheme's stability is grid-independent, although the restriction on the timestep due to parameters must still hold.
+
+
+
+
+
+
+
+
+
+
+\problem{Problem 2}{Write programs to solve
+\begin{gather*}
+    u_t = \laplacian u\text{ on } \Omega = (0,1)\times(0,1)\\
+    u = 0 \text{ on } \partial \Omega \\
+    u(x,y,0) = \exp[-100\qty(\qty(x - 0.3)^2 + \qty(y - 0.4)^2)]
+\end{gather*}
+on time $t=1$ using forward Euler and Crank-Nicolson.  For Crank-Nicolson use a fixed time step of $\Dt = 0.01$, and for forward Euler use a time step just below the stability limit.  For Crank-Nicolson use Gaussian elimination to solve the linear system that arises, but make sure to account for the banded structure of the matrix.
+\begin{enumerate}[\ \ (a)]
+    \item Time your codes for different grid sizes and compare the time to solve using forward Euler and Crank-Nicolson.
+    \item In theory, how should the time scale as the grid is refined for each algorithm?  How did the time scale with the grid size in practice?
+    \item For this problem we could use an FFT-based Poisson solver which will perform the direct solve in $\order{N\log(N)}$, where $N$ is the total number of grid points.  We could also use multigrid and perform the solve in $\order{N}$ time.  How should the time scale as the grid is refined for Crank-Nicolson if we used an $\order{N}$ solver?
+\end{enumerate}}
+
+\begin{enumerate}[\ \ (a)]
+    \item
+        Here are my results for Crank Nicolson with $\Dt = 0.1$:
+        \begin{table}[ht!]
+            \centering
+            \begin{tabular}{||l|l|l||}\hline\hline
+                $\Dx$ & Time (in seconds) & Ratio of Times \\\hline\hline
+                $2^{-1}$ & 0.012895 & $-$ \\\hline
+                $2^{-2}$ & 0.011698 & 0.907173 \\\hline
+                $2^{-3}$ & 0.020378 & 1.742007 \\\hline
+                $2^{-4}$ & 0.060067 & 2.947640 \\\hline
+                $2^{-5}$ & 0.215499 & 3.587644 \\\hline
+                $2^{-6}$ & 1.030257 & 4.780797 \\\hline
+                $2^{-7}$ & 5.908587 & 5.735061 \\\hline
+                $2^{-8}$ & 41.908587 & 7.018448 \\\hline
+                $2^{-9}$ & 325.780549 & 7.855981 \\\hline
+                $2^{-10}$ & 2487.858994 & 7.636610 \\\hline\hline
+            \end{tabular}
+        \end{table}
+        \FloatBarrier
+        and here are my results for Forward Euler:
+        \begin{table}[ht!]
+            \centering
+            \begin{tabular}{||l|l|l|l||}\hline\hline
+                $\Dx$ & $\Dt = 0.99\cdot\frac{\Dx^2}{4} $ & Time (in seconds) & Ratio of Times \\\hline\hline
+                $2^{-1}$ & 0.061875 & 0.003497 & $-$ \\\hline
+                $2^{-2}$ & 0.015469 & 0.010958 & 3.133540 \\\hline
+                $2^{-3}$ & 0.003867 & 0.077131 & 7.038784 \\\hline
+                $2^{-4}$ & $9.667969\times10^{-4}$ & 0.79462 & 10.302213 \\\hline
+                $2^{-5}$ & $2.416992\times10^{-4}$ & 10.543643 & 13.268786 \\\hline
+                $2^{-6}$ & $6.042480\times10^{-5}$ & 163.215439 & 15.479985 \\\hline
+                $2^{-7}$ & $1.510621\times10^{-5}$ & 2823.96858 & 17.302092 \\\hline\hline
+            \end{tabular}
+        \end{table}
+    \item
+        Each step of Crank Nicolson requires we invert a matrix $N\times N$ matrix where $N = N_xN_y$ is the total number of grid points.  In 2D, the matrix we are solving is a penta-diagonal matrix with bandwidths $N_x$ and $N_y$, so standard sparse solvers will need $\order{NN_xN_y} = \order{N^2}$ operations.  Since Crank-Nicolson is unconditionally stable, we don't need to refine the time step when we refine the mesh.  So doubling $N_x$ and $N_y$ should result in a 16-fold increase in the number of operations.  My results show that doubling $N_x$ and $N_y$ results in up to 8-fold increases in the number of operations.  This means the Python solver \verb|spsolve| is inverting matrices with $\order{N^{3/2}}$ operations.
+
+        Each step of Forward Euler requires $\order{N_xN_y} = \order{N}$ operations.  But since Forward Euler is not unconditionally stable, we mush refine the time step as we refine the mesh.  So Since $\Dt$ must be $\order{\Dx^2}$, we need $\order{N}$ operations.  So, forward Euler requires $\order{N^2}$ total operations.  This means doubling $N_x$ and $N_y$ should result in a 16-fold increase in the number of operations.  My results show greater than 17-fold increases in the number of operations.  I don't know why this is.
+    \item
+        If we used an $\order{N}$ solver in Crank-Nicolson, then doubling $N_x$ and $N_y$ (i.e.~quadrupling $N$) should approximately quadruple the total number of operations since we don't need to refine the time step.
+\end{enumerate}
+
+
+
+
+
+
+
+\end{document}
+
+
+
+
+
+
+
+
+

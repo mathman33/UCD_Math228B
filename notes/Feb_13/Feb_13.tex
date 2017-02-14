@@ -1,0 +1,152 @@
+\documentclass{article}
+
+
+\usepackage[margin=0.6in]{geometry}
+\usepackage{amssymb, amsmath, amsfonts}
+\usepackage{tabularx}
+\usepackage{arydshln}
+\usepackage{mathtools}
+\usepackage{changepage}
+\usepackage{asymptote}
+\usepackage{cancel}
+\usepackage{physics}
+\usepackage{pgf}
+\usepackage{enumerate}
+\usepackage{placeins}
+\usepackage{enumitem}
+\usepackage{nth}
+\usepackage{array}
+\usepackage{tikz}
+\usetikzlibrary{arrows,automata}
+\tikzset{
+  saveuse path/.code 2 args={
+    \pgfkeysalso{#1/.style={insert path={#2}}}%
+    \global\expandafter\let\csname pgfk@\pgfkeyscurrentpath/.@cmd\expandafter\endcsname
+      % not optimal as it is now global through out the document
+                           \csname pgfk@\pgfkeyscurrentpath/.@cmd\endcsname
+    \pgfkeysalso{#1}},
+  /pgf/math set seed/.code=\pgfmathsetseed{#1}}
+\usepackage{nicefrac}
+\usepackage{pgfplots}
+\newcommand{\enth}{$n$th}
+\newcommand{\Rl}{\mathbb{R}}
+\newcommand{\Cx}{\mathbb{C}}
+\newcommand{\sgn}[1]{\text{sgn}\qty[#1]}
+\newcommand{\ran}[1]{\text{ran}\qty[#1]}
+\newcommand{\E}{\varepsilon}
+\newcommand{\qiq}{\qquad \implies \qquad}
+\newcommand{\half}{\nicefrac{1}{2}}
+\newcommand{\third}{\nicefrac{1}{3}}
+\newcommand{\quarter}{\nicefrac{1}{4}}
+\newcommand{\f}[3]{#1\ :\ #2 \rightarrow #3}
+\newcommand{\Dx}{\Delta x}
+\newcommand{\Dy}{\Delta y}
+\newcommand{\Dt}{\Delta t}
+\newcommand{\hot}{\text{h.o.t.}}
+\newcommand{\centdiff}{\frac{u_j^{n+1} - u_j^n}{\Dt}}
+
+\newcommand{\tridsym}[3]{
+    \qty(\begin{array}{ccccc}
+                    #1 & #2 & & & \\
+                    #3 & #1 & #2 & & \\
+                    & \ddots & \ddots & \ddots &  \\
+                    & & #3 & #1 & #2 \\
+                    & & & #3 & #1
+                \end{array})
+}
+
+
+\DeclareMathOperator*{\esssup}{\text{ess~sup}}
+
+\title{MAT 228B Notes}
+\author{Sam Fleischer}
+\date{February 13, 2017}
+
+\begin{document}
+    \maketitle
+
+    \section{ADI Scheme}
+        \begin{align*}
+            \qty(I - \frac{\Dt b}{2}L_x)u^* &= \qty(I + \frac{\Dt b}{2}L_y)u^n \\
+            \qty(I - \frac{\Dt b}{2}L_y)u^{n+1} &= \qty(I + \frac{\Dt b}{2}L_x)u^*
+        \end{align*}
+        which is
+        \begin{align*}
+            \qty(I - \frac{\Dt b}{2}L_x)\qty(I - \frac{\Dt b}{2}L_y)u^{n+1} = \qty(I + \frac{\Dt b}{2}L_x)\qty(I + \frac{\Dt b}{2}L_y)u^n
+        \end{align*}
+        vs.~Crank Nicolson
+        \begin{align*}
+            \qty(I - \frac{\Dt b}{2}L_x - \frac{\Dt b}{2}L_y)u^{n+1} = \qty(I + \frac{\Dt b}{2}L_x + \frac{\Dt b}{2}L_y)u^n
+        \end{align*}
+        so ADI is a small perturbation of Crank Nicolson, but a lot faster.  What about in 3D?  Start with a scheme like
+        \begin{align*}
+            \qty(I - \frac{\Dt b}{2}L_x)\qty(I - \frac{\Dt b}{2}L_y)\qty(I - \frac{\Dt b}{2}L_z)u^{n+1} = \qty(I + \frac{\Dt b}{2}L_x)\qty(I + \frac{\Dt b}{2}L_y)\qty(I + \frac{\Dt b}{2}L_z)u^n
+        \end{align*}
+        just by analogy with the 2D scheme.
+
+    \section{Backward-Euler-like Schemes}
+        In 2D, might try
+        \begin{align*}
+            \qty(I - \Dt bL_x - \Dt b L_y)u^{n+1} = u^n
+        \end{align*}
+        so,
+        \begin{align*}
+            \qty(I - \Dt b L_x)\qty(I - \Dt b L_y)u^{n+1} = u^n + \Dt^2 b^2 L_xL_y u^n
+        \end{align*}
+
+    \section{Fractional-Step Methods}
+        Consider the PDE $u_t = b\laplacian u + f(u)$.
+        \begin{itemize}
+            \item For example, $u_t = b\laplacian u + Ku(1 - u)$
+        \end{itemize}
+        How would we tackle this?
+        \begin{itemize}
+            \item method of lines?
+            \item IM-EX (Implicit-Explicit) Scheme, i.e.~some terms are implicit and some terms are explicit.
+            \item Fractional Step (different solvers for different terms)
+        \end{itemize}
+
+        \subsection{Method of Lines}
+            Let's use the trapezoidal rule:
+            \begin{align*}
+                \frac{u^{n+1} - u_n}{\Dt} = \frac{b}{2}\qty(Lu^n + Lu^{n+1}) + \frac{1}{2}\qty(f(u^n) + f(u^{n+1})) \\
+                u^{n+1} - \frac{b\Dt}{2} - Lu^{n+1} - \frac{\Dt}{2}f(u^{n+1})= u^n + \frac{b\Dt}{2}Lu^n + \frac{\Dt}{2}f(u^n)
+            \end{align*}
+            If $f$ is nonlinear, we have to do a nonlinear solve every step (expensive).  Perhaps we use Newton's method?
+            \begin{adjustwidth}{2cm}{4cm}
+                Newton's method for a scalar equation.. trying to solve $F(x) = 0$ for $x$.
+                \begin{align*}
+                    f'(x^k)\qty(x^{k+1} - x_k) &= 0 - f(x^k) \\
+                    x^{k+1} &= x^k - \frac{f(x^k)}{f(x^{k+1})}
+                \end{align*}
+                What changes with a vector instead of a scalar?  Suppose $\f{f}{\Rl^n}{\Rl^n}$, and we want to solve $f(u) = 0$.  The ``derivative'' of a vector-to-vector function is the Jacobian.  It's the first-order approximation of a nonlinear vector function.
+                \begin{align*}
+                    L(u^k)\qty(u^{k+1} - u^k) = -f(u^k)
+                \end{align*}
+                \begin{itemize}
+                    \item Solve $L\delta = -f(u^{k})$ for $\delta$.
+                    \item Set $u^{k+1} = u^k + \delta$.
+                \end{itemize}
+            \end{adjustwidth}
+            So we would have to run Newton's method each iteration.
+
+        \subsubsection{Fractional Stepping}
+            Discretize Space:
+            \begin{align*}
+                \frac{\dd u}{\dd t} = Lu + f(u)
+            \end{align*}
+            How to get $u^{n+1}$ from $u^n$?  Solve $\dfrac{\dd u}{\dd t} = Lu$ for time length $\Dt$ to get $u^*$, where $u(t_n) = u^n$.  Then solve $\frac{\dd u}{\dd t} = f(u)$ for time length $\Dt$ to get $u^{n+1}$, where $u(t_n) = u^*$.
+
+\end{document}
+
+
+
+
+
+
+
+
+
+
+
+

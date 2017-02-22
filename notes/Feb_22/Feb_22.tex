@@ -1,0 +1,164 @@
+\documentclass{article}
+
+
+\usepackage[margin=0.6in]{geometry}
+\usepackage{amssymb, amsmath, amsfonts}
+\usepackage{tabularx}
+\usepackage{arydshln}
+\usepackage{mathtools}
+\usepackage{changepage}
+\usepackage{asymptote}
+\usepackage{cancel}
+\usepackage{physics}
+\usepackage{pgf}
+\usepackage{enumerate}
+\usepackage{placeins}
+\usepackage{nth}
+\usepackage{array}
+\usepackage{tikz}
+\usetikzlibrary{arrows,automata}
+\tikzset{
+  saveuse path/.code 2 args={
+    \pgfkeysalso{#1/.style={insert path={#2}}}%
+    \global\expandafter\let\csname pgfk@\pgfkeyscurrentpath/.@cmd\expandafter\endcsname
+      % not optimal as it is now global through out the document
+                           \csname pgfk@\pgfkeyscurrentpath/.@cmd\endcsname
+    \pgfkeysalso{#1}},
+  /pgf/math set seed/.code=\pgfmathsetseed{#1}}
+\usepackage{nicefrac}
+\usepackage{pgfplots}
+\usepgfplotslibrary{polar}
+\pgfplotsset{holdot/.style={fill=white,only marks,mark=*}}
+\pgfplotsset{soldot/.style={only marks,mark=*}}
+\newcommand{\enth}{$n$th}
+\newcommand{\Rl}{\mathbb{R}}
+\newcommand{\Cx}{\mathbb{C}}
+\newcommand{\sgn}[1]{\text{sgn}\qty[#1]}
+\newcommand{\ran}[1]{\text{ran}\qty[#1]}
+\newcommand{\E}{\varepsilon}
+\newcommand{\qiq}{\qquad \implies \qquad}
+\newcommand{\half}{\nicefrac{1}{2}}
+\newcommand{\third}{\nicefrac{1}{3}}
+\newcommand{\quarter}{\nicefrac{1}{4}}
+\newcommand{\f}[3]{#1\ :\ #2 \rightarrow #3}
+\newcommand{\Dx}{\Delta x}
+\newcommand{\Dy}{\Delta y}
+\newcommand{\Dt}{\Delta t}
+\newcommand{\hot}{\text{h.o.t.}}
+\newcommand{\centdiff}{\frac{u_j^{n+1} - u_j^n}{\Dt}}
+
+\newcommand{\tridsym}[3]{
+    \qty(\begin{array}{ccccc}
+                    #1 & #2 & & & \\
+                    #3 & #1 & #2 & & \\
+                    & \ddots & \ddots & \ddots &  \\
+                    & & #3 & #1 & #2 \\
+                    & & & #3 & #1
+                \end{array})
+}
+
+
+\DeclareMathOperator*{\esssup}{\text{ess~sup}}
+
+\title{MAT 228B Notes}
+\author{Sam Fleischer}
+\date{February 17, 2017}
+
+\begin{document}
+    \maketitle
+
+    \section{Hyperbolic Equations}
+        \begin{align*}
+            \vec{u}_t + A\vec{u}_x = 0
+        \end{align*}
+        This is hyperbolic in $A$, has real eigenvalues, and is diagonalizable (and is linear).  The nonlinear problem would be
+        \begin{align*}
+            \vec{u}_t + (\vec{F}(\vec{u}))_x = 0
+        \end{align*}
+        This is hyperbolic if the Jacobian of $\vec{F}$ has real eigenvalues and is diagonalizable.
+
+        We can start with an advection equation:
+        \begin{align*}
+            u_t + a u_x = 0
+        \end{align*}
+        with $u(x,0) = u_0(x)$.  The solution is $u(x,t) = u_0(x - a(t))$.
+
+        Forward-time centered-space is
+        \begin{align*}
+            \frac{u_j^{n+1} - u_j^n}{\Dt} + a\frac{u_{j+1}^n - u_{j-1}^n}{2\Dx} = 0
+        \end{align*}
+        but it is unstable.  Rearranging gives
+        \begin{align*}
+            u_j^{n+1} = u_j^n - \frac{a\Dt}{2\Dx}\qty(u_{j+1}^n - u_{j-1}^n)
+        \end{align*}
+        By the way, $\nu = \frac{a\Dt}{\Dx}$ is called the Courant Number.  $a$ has dimensions length/time, so $\nu$ is dimensionless.  Anyway,
+        \begin{align*}
+            u_j^{n+1} = u_j^n - \frac{\nu}{2}\qty(u_{j+1}^n - u_{j-1}^n)
+        \end{align*}
+        We can do Von Neumann analysis to get the amplification factor $g(\xi)$
+        \begin{align*}
+            g(\xi) = 1 - i\nu\sin(\xi\Dx)
+        \end{align*}
+        So we see that $\abs{g} \geq 1$ for all $\xi$.
+        \begin{align*}
+            \abs{g}^2 = 1 + \frac{\Dt^2 a^2}{\Dx^2}\sin^2(\xi\Dx)
+        \end{align*}
+        What if we picked $\Dt = \order{\Dx^2}$?  Then
+        \begin{align*}
+            \abs{g}^2 = 1 + C\Dt a^2\sin^2(\xi\Dx)
+        \end{align*}
+        So, for small $\Dx$,
+        \begin{align*}
+            \abs{g} \leq 1 + \alpha\Dt + \hot
+        \end{align*}
+        for $\alpha$ independent of $\Dt$.  This means it is actually technically stable, but not useful.  Don't take a crappy scheme (first order time and space) and make it ``better'' by just taking tiny time and spacesteps.  This is a tight timestep restriction (like forward Euler for diffusion).  In general, the model Hyperbolic problems, we'll be able to take $\Dt = \order{\Dx}$.  Why?  We can us Lax-Friedrichs Scheme...
+
+        \subsection{Lax-Friedrichs Scheme}
+            Making a slight modification (spatial average of $u_j^n$ term), we get
+            \begin{align*}
+                u_j^{n+1} = \frac{1}{2}\qty(u_{j-1}^n + u_{j+1}^n) - \frac{a\Dt}{2\Dx}\qty(u_{j+1}^n - u_{j-1}^n)
+            \end{align*}
+            The amplification factor for LF is
+            \begin{align*}
+                g(\xi) = \cos(\xi\Dx) - i\nu\sin(\xi\Dx)
+            \end{align*}
+            So $g$ is an ellipse in the complex plane with real radius $1$ and imaginary readius $\nu$.  So, $\abs{g} \leq 1$ if $\abs{\nu} \leq 1$.  So, for stability of LF, we need
+            \begin{align*}
+                \abs{\frac{a\Dt}{\Dx}} \leq 1 \qquad\qquad\text{or}\qquad\qquad \Dt \leq \frac{\Dx}{\abs{a}}
+            \end{align*}
+            \textbf{So the timestep must be less than the time it takes to move one grid spacing.}  Let's do the analysis for consistency.
+            \begin{align*}
+                \centdiff = \frac{u_{j-1} - 2u_j^n + u_{j+1}^n}{2\Dt} - \frac{a}{2\Dx}\qty(u_{j+1}^n - u_{j-1}^n) \\
+                \centdiff = \frac{\Dx^2}{2\Dt}\frac{u_{j-1} - 2u_j^n + u_{j+1}^n}{\Dx^2} - \frac{a}{2\Dx}\qty(u_{j+1}^n - u_{j-1}^n)
+            \end{align*}
+            Plugging in the Taylor series into the PDE gives
+            \begin{align*}
+                u_t + \order{\Dt} = \frac{\Dx^2}{2\Dt}u_{xx} + \order{\frac{\Dx^4}{2\Dt}} - au_x + \order{\Dx^2} \\
+                u_t + au_x = \order{\frac{\Dx^2}{\Dt}} + \order{\Dt} + \order{\Dx^2}
+            \end{align*}
+            So this is consistent provided $\frac{\Dx^2}{\Dt} \rightarrow 0$.  Working with a fixed Courant number, for example, ensures this.  So it's consistent and stable, and thus LF converges.  But FTCS (forward-time, centered-space) is not.
+            \begin{align*}
+                \centdiff = -\frac{a}{2\Dx}\qty(u_{j+1}^n - u_{j-1}^n) + \E\qty(\frac{u_{j-1}^n - 2u_j^n + u_{j+1}^n}{\Dx^2})
+            \end{align*}
+            where $\E = \frac{\Dx^2}{2\Dt}$.  In other words, we added a slight diffusive term to fight the growth found in FTCS.  We showed this is stable if and only if $\nu^2 \leq 2\mu \leq 1$ (where $\mu = \frac{\Dt}{\Dx^2}\E$).  So $\mu = \frac{\Dt}{\Dx^2}\frac{\Dx^2}{2\Dt} = \frac{1}{2}$.  Picking $\mu = \frac{1}{2}$ is the smallest value of diffusion we could use to avoid a timestep restriction from diffusion.  \emph{This means our only stability constraint is $\abs{\frac{a\Dt}{\Dx}} \leq 1$?}
+
+        \subsection{CFL (Courant-Friedrichs-Levi) Condition}
+            There is a space-time cone in hyperbolic equations that doesn't exist in diffusion.  In hyperbolic equations, there is finite speed of information propagation.  We should consider this when designing numerical schemes.  What is the domain of dependence of the point $(x,t)$?  It is the set of all points in space-time on which the solution depends at $(x,t)$.  The solution propagates along the curves $x - at = x_0$ (the characteristic curve).  So the point $(x - at,0)$ is all we need?  For advection, the domain of dependence of the point $(x,t)$ is the single point $(x-at)$.  What if
+            \begin{align*}
+                u_t + au_x = f(t)
+            \end{align*}
+            then we need the values of $f$ along the characteristic curve, so the domain of dependence is the line segment between $(x-at,0)$ and $(x,t)$.  If $u_t + au_x = f(x,t)$ then we get the space-time cone.  We will need the numerical domain of dependence to include the analytic domain of dependence.
+
+\end{document}
+
+
+
+
+
+
+
+
+
+
+
+

@@ -1,0 +1,149 @@
+\documentclass{article}
+
+
+\usepackage[margin=0.6in]{geometry}
+\usepackage{amssymb, amsmath, amsfonts}
+\usepackage{tabularx}
+\usepackage{arydshln}
+\usepackage{mathtools}
+\usepackage{changepage}
+\usepackage{asymptote}
+\usepackage{cancel}
+\usepackage{physics}
+\usepackage{pgf}
+\usepackage{enumerate}
+\usepackage{placeins}
+\usepackage{nth}
+\usepackage{array}
+\usepackage{tikz}
+\usetikzlibrary{arrows,automata}
+\tikzset{
+  saveuse path/.code 2 args={
+    \pgfkeysalso{#1/.style={insert path={#2}}}%
+    \global\expandafter\let\csname pgfk@\pgfkeyscurrentpath/.@cmd\expandafter\endcsname
+      % not optimal as it is now global through out the document
+                           \csname pgfk@\pgfkeyscurrentpath/.@cmd\endcsname
+    \pgfkeysalso{#1}},
+  /pgf/math set seed/.code=\pgfmathsetseed{#1}}
+\usepackage{nicefrac}
+\usepackage{pgfplots}
+\usepgfplotslibrary{polar}
+\pgfplotsset{holdot/.style={fill=white,only marks,mark=*}}
+\pgfplotsset{soldot/.style={only marks,mark=*}}
+\newcommand{\enth}{$n$th}
+\newcommand{\Rl}{\mathbb{R}}
+\newcommand{\Cx}{\mathbb{C}}
+\newcommand{\sgn}[1]{\text{sgn}\qty[#1]}
+\newcommand{\ran}[1]{\text{ran}\qty[#1]}
+\newcommand{\E}{\varepsilon}
+\newcommand{\qiq}{\qquad \implies \qquad}
+\newcommand{\half}{\nicefrac{1}{2}}
+\newcommand{\third}{\nicefrac{1}{3}}
+\newcommand{\quarter}{\nicefrac{1}{4}}
+\newcommand{\f}[3]{#1\ :\ #2 \rightarrow #3}
+\newcommand{\Dx}{\Delta x}
+\newcommand{\Dy}{\Delta y}
+\newcommand{\Dt}{\Delta t}
+\newcommand{\hot}{\text{h.o.t.}}
+\newcommand{\centdiff}{\frac{u_j^{n+1} - u_j^n}{\Dt}}
+\newcommand{\dod}{Domain of Depdendence}
+
+\newcommand{\tridsym}[3]{
+    \qty(\begin{array}{ccccc}
+                    #1 & #2 & & & \\
+                    #3 & #1 & #2 & & \\
+                    & \ddots & \ddots & \ddots &  \\
+                    & & #3 & #1 & #2 \\
+                    & & & #3 & #1
+                \end{array})
+}
+
+
+\DeclareMathOperator*{\esssup}{\text{ess~sup}}
+
+\title{MAT 228B Notes}
+\author{Sam Fleischer}
+\date{February 24, 2017}
+
+\begin{document}
+    \maketitle
+
+    \section{CFL Condition}
+
+        This means that the analytic domain of dependence is contained within the numerical \dod.  The CFL condition is a necessary condition for convergence.
+
+        \noindent The numerical \dod\ for explicit / 3 point centered scheme..
+        \begin{itemize}
+            \item Consider a space-time lattice.. the point $(x_j,t_n)$ depends on the points $(x_j - \Dx,t_{n-1}), (x_j,t_{n-1}), (x_j + \Dx,t_{n-1})$.
+            \item So the \dod\ is cone-shaped.
+            \item So the points at $t= t_0$ which $(x_j,t_n)$ depend on are all the points between $\qty(x_j - n\Dx,0)$ and $\qty(x_j + n\Dx,0)$.  But remember $n = \nicefrac{t}{\Dt}$.  So it's all the points between $(x_j - \frac{\Dx}{\Dt}t,0)$ and $(x_j + \frac{\Dx}{\Dt}t,0)$.
+            \item When we refine the mesh, we make sure $\Dt \propto \Dx$.  So the \dod\ doesn't change shape as $\Dt$ and $\Dx$ are refined.  We also get more points in the \dod.
+        \end{itemize}
+        What do we need for the CFL condition?  The CFL for advection eqatuion is 
+        \begin{align*}
+            x - rt \leq x - at \leq x + rt \\
+            -1 \leq \frac{a}{r} \leq 1
+        \end{align*}
+        were $-1 = -\frac{a\Dt}{\Dx} \leq 1$, that is,
+        \begin{align*}
+            \nu = \frac{\abs{a}\Dt}{\Dx} \leq 1.
+        \end{align*}
+        For forward-time centered-space, we need this, but it is not sufficient for convergence.
+
+    \section{Be Smart About Your Scheme!}
+
+        Suppose $u_t + au_x = 0$ and $a > 0$.  We only need information from past times to the left.  Why use a centered scheme?  Instead we can use the ``upwind method.''
+
+        Consider the point $P = (x,t)$ in space time.  We can track back to $Q = (x - a\Dt, t - \Dt)$, which is the point in space time at time $t - \Dt$ along the characteristic curve $x - at = \text{const.}$.  Then let $A$ and $B$ be the points to the left and right of point $Q$, so $A = (x - \Dx, t - \Dt)$ and $B = (x + \Dx, t- \Dt)$.  So,
+        \begin{align*}
+            \abs{QA} &= x - a\Dt - \qty(x - \Dx) = \Dx - a\Dt = \Dx(1 - \nu) \\
+            \abs{QB} &= x - (x - a\Dt) = a\Dt = \Dx\nu \\
+            \implies u(Q) &\approx \frac{\Dx\qty(1 - \nu)u(B) + \Dx\nu u(A)}{\Dx\qty(1 - \nu) + \Dx\nu} = \qty(1 - \nu)u(B) + \nu u(A)
+        \end{align*}
+        So the upwind method for $a > 0$ is
+        \begin{align*}
+            u_j^{n+1} &= \qty(1 - \nu)u_j^n + \nu u_{j-1}^n \\
+            &= u_j^n - \nu\qty(u_j^n - u_{j-1}^n) \\
+            &= u_j^n - \frac{a\Dt}{\Dx}\qty(u_j^n - u_{j-1}^n) \\
+            \implies \frac{u_j^{n+1} - u_j^n}{\Dt} + a\frac{u_j^n - u_{j-1}^n}{\Dx} &= 0
+        \end{align*}
+        This is a consistent discretization but we used standard forward-time, backward-space, so this is first order in time and space.
+
+        More generally, if $a < 0$, we use forward-space difference since that is the upwind direction.  In particular,
+        \begin{align*}
+            u_j^{n+1} = \begin{cases}
+                u_j - \dfrac{a\Dt}{\Dx}\qty(u_j^n - u_{j-1}^n) & \text{ if } a \geq 0 \\[.4cm]
+                u_j - \dfrac{a\Dt}{\Dx}\qty(u_{j+1}^n - u_j^n) & \text{ if } a < 0
+            \end{cases}
+        \end{align*}
+
+        As an aside, these are schemes for $u_t + au_x = 0$.  If we had something in conservation form $u_t + \qty(a(x)u)_x = 0$.
+
+        Anyway, we need to check the stability of upwind ($a > 0$)..
+        \begin{align*}
+            g(\xi) = 1 - \nu\qty(1 - e^{i\xi\Dx}) = \qty(1 - \nu) + \nu e^{-i\xi\Dx}
+        \end{align*}
+        We know $\nu \leq 1$ by CFL (necessary for convergence).  This is a circle at center $1 - \nu$ with radius $\nu$.  We need $\nu \leq 1$ for stability.
+
+        Upwinding has a nice maximum principle associated with it..
+        \begin{align*}
+            u_j^{n+1} = (1 - \nu)u_j^n + \nu u_{j-1}^n \qquad \text{for $a > 0$}
+        \end{align*}
+        and let $m^n = \max_{j}\abs{u^n}$.  So,
+        \begin{align*}
+            m^{n+1} \leq \qty(1 - \nu)m^n + \nu m^n = m^n
+        \end{align*}
+
+\end{document}
+
+
+
+
+
+
+
+
+
+
+
+

@@ -1,0 +1,177 @@
+\documentclass{article}
+
+
+\usepackage[margin=0.6in]{geometry}
+\usepackage{amssymb, amsmath, amsfonts}
+\usepackage{tabularx}
+\usepackage{arydshln}
+\usepackage{mathtools}
+\usepackage{changepage}
+\usepackage{asymptote}
+\usepackage{cancel}
+\usepackage{physics}
+\usepackage{pgf}
+\usepackage{enumerate}
+\usepackage{placeins}
+\usepackage{nth}
+\usepackage{array}
+\usepackage{tikz}
+\usetikzlibrary{arrows,automata}
+\tikzset{
+  saveuse path/.code 2 args={
+    \pgfkeysalso{#1/.style={insert path={#2}}}%
+    \global\expandafter\let\csname pgfk@\pgfkeyscurrentpath/.@cmd\expandafter\endcsname
+      % not optimal as it is now global through out the document
+                           \csname pgfk@\pgfkeyscurrentpath/.@cmd\endcsname
+    \pgfkeysalso{#1}},
+  /pgf/math set seed/.code=\pgfmathsetseed{#1}}
+\usepackage{nicefrac}
+\usepackage{pgfplots}
+\usepgfplotslibrary{polar}
+\pgfplotsset{holdot/.style={fill=white,only marks,mark=*}}
+\pgfplotsset{soldot/.style={only marks,mark=*}}
+\newcommand{\enth}{$n$th}
+\newcommand{\Rl}{\mathbb{R}}
+\newcommand{\Cx}{\mathbb{C}}
+\newcommand{\sgn}[1]{\text{sgn}\qty[#1]}
+\newcommand{\ran}[1]{\text{ran}\qty[#1]}
+\newcommand{\E}{\varepsilon}
+\newcommand{\qiq}{\qquad \implies \qquad}
+\newcommand{\half}{\nicefrac{1}{2}}
+\newcommand{\third}{\nicefrac{1}{3}}
+\newcommand{\quarter}{\nicefrac{1}{4}}
+\newcommand{\f}[3]{#1\ :\ #2 \rightarrow #3}
+\newcommand{\Dx}{\Delta x}
+\newcommand{\Dy}{\Delta y}
+\newcommand{\Dt}{\Delta t}
+\newcommand{\Dphi}{\Delta \phi}
+\newcommand{\hot}{\text{h.o.t.}}
+\newcommand{\centdiff}{\frac{u_j^{n+1} - u_j^n}{\Dt}}
+\newcommand{\dod}{Domain of Depdendence}
+
+\newcommand{\tridsym}[3]{
+    \qty(\begin{array}{ccccc}
+                    #1 & #2 & & & \\
+                    #3 & #1 & #2 & & \\
+                    & \ddots & \ddots & \ddots &  \\
+                    & & #3 & #1 & #2 \\
+                    & & & #3 & #1
+                \end{array})
+}
+
+
+\DeclareMathOperator*{\esssup}{\text{ess~sup}}
+
+\title{MAT 228B Notes}
+\author{Sam Fleischer}
+\date{March 10, 2017}
+
+\begin{document}
+    \maketitle
+
+    \section{Conservation Laws}
+
+        \subsection{Integral Form}
+            Using the integral form of $u_t + \qty(f(u))_x = 0$, we find
+            \begin{align*}
+                \frac{u_j^{n+1} - u_j^n}{\Dt} + \frac{F_{j+\half}^n - F_{j-\half}^n}{\Dx} = 0
+            \end{align*}
+            where we are letting
+            \begin{align*}
+                u_j = \frac{1}{\Dx}\int_{x_{j-\half}}^{x_{j+\half}}u(x,t)\dd x,
+            \end{align*}
+            where $F$ is time-averagd flux through the cell edge.  Schemes of the above form are discretely conservative.
+            \begin{align*}
+                u_j^{n+1} = u_j^n - \frac{\Dt}{\Dx}\qty(F_{j+\half}^n - F_{j-\half}^n)
+            \end{align*}
+            Let the cells be indexed by $j = j_1$ to $j = j_2$.  The total amount of stuff in these cells is $\Dx\sum_{j=j_1}^{j_2} u_j^n$ at time $t_n$.
+            \begin{align*}
+                \Dx\sum_{j=j_1}^{j_2}u_j^{n+1} &= \Dx\sum_{j=j_1}^{j_2}u_j^n - \Dt\sum_{j=j_1}^{j_2}\qty(F_{j+\half}^n - F_{j-\half}^n) \\
+                &= \Dx\sum_{j=j_1}^{j_2}u_j^n - \Dt\qty(F_{j_2 +\half}^n - F_{j_1-\half}^n)
+            \end{align*}
+            If $F$'s are zero on the ends, $\Dx\sum_{j=j_1}^{j_2}u_j^{n+1} = \Dx\sum_{j=j_1}^{j_2}u_j^n$
+
+        \subsection{Differential Form}
+            Using the differential form of $u_t + \qty(f(u))_x = 0$ i.e.~$u_t + f'(u)u_x = 0$.  Suppose $f'(u) > 0$.
+
+            \subsubsection{Upwind Discretization}
+                Because $f'(u) > 0$, an appropriate discretization is
+                \begin{align*}
+                    \frac{u_j^{n+1} - u_j^n}{\Dt}+ f'(u_j^n)\frac{u_j^n - u_{j-1}^n}{\Dx} = 0 \\
+                    u_j^{n+1} = u_j^n - \frac{\Dt}{\Dx}f'(u_j^n)\qty(u_j^n - u_{j-1}^n) \\
+                    \Dx\sum_{j=j_1}^{j_2}u_j^{n+1} &= \Dx\sum_{j=j_1}^{j_2}u_j^n - \Dt\sum_{j=j_1}^{j_2}f'(u_j^n)\qty(u_j^n - u_{j-1}^n) \\
+                    &= \Dx\sum_{j=j_1}^{j_2}u_j^n - \Dt\qty(f'(u_{j_1}^n)\qty(u_{j_1}^n - u_{j_1-1}^n) + f'(u_{j_1+1}^n)\qty(u_{j_1+1}^n - u_{j_1}^n) + \dots)
+                \end{align*}
+                The series is not telescoping, so this is not discreteley conservative.
+
+    \section{Using Numerical Flux Functions}
+        \begin{align*}
+            \centdiff + \frac{F_{j+\half}^n - F_{j-\half}^n}{\Dx} = 0
+        \end{align*}
+        with
+        \begin{align*}
+            u_j^n = \frac{1}{\Dx}\int_{x_{j - \half}}^{x_{j+\half}}u(x,t_n)\dd x
+        \end{align*}
+        If
+        \begin{align*}
+            F_{j+\half}^n = \frac{1}{\Dt}\int_{t_n}^{t_{n+1}}f(u(x_{j+\half},t))\dd t,
+        \end{align*}
+        then we cannot compute this exactly.  We need to construct ``numerical flux functions'' for $F_{j+\half}^n$ which approximate the time-averaged flux. \\
+
+        Suppose $f(u) = au$ and $a > 0$.  We can approximate $f(u(x_{j+\half},t)) = f(u(x_j,t_n))$ over the timestep.  But $f(u(x_j,t_n)) = au_j^n$, so
+        \begin{align*}
+            F_{j+\half}^{\text{up}} = \begin{cases}
+                au_j^n & a > 0 \\
+                au_{j+1}^n & a < 0
+            \end{cases}
+        \end{align*}
+        This leads us to...
+
+    \section{2-Step Lax-Wendroff}
+        We are going to approximate $f(u(x_{j+\half},t)) = f(u(x_{j+\half},t_{n+\half}))$ over the time interval.  This gives 2nd order time approximation to the average flux.  But we need an approximation for $x_{j+\half}$ and $t_{n+\half}$.  That is,
+        \begin{align*}
+            u_{j+\half}^{n+\half} = u_{j+\half}^n - \frac{\Dt}{2}\qty(\frac{f(u_{j+1}^n) - f(u_j^n)}{\Dx}) \\
+            u_{j+\half}^{n+\half} = \frac{1}{2}\qty(u_j^n + u_{j+1}^n) - \frac{\Dt}{2\Dx}\qty(f(u_{j+1}^n) - f(u_j^n))
+        \end{align*}
+        Letting $f(u) = au$ gives
+        \begin{align*}
+            u_{j+\half}^{n+\half} = \frac{1}{2}\qty(u_j^n + u_{j+1}^n) - \frac{a\Dt}{2\Dx}\qty(u_{j+1}^n - u_j^n)
+        \end{align*}
+        Then,
+        \begin{align*}
+            F_{j+\half}^\text{LW} = f(u_{j+\half}^{n+\half}) = au_{j+\half}^{n+\half} = \frac{a}{2}\qty(u_j^n + u_{j+1}^n) - \frac{a^2\Dt}{2\Dx}\qty(u_{j+1}^n - u_j^n)
+        \end{align*}
+        So,
+        \begin{align*}
+            u_j^{n+1} &= u_j^n - \frac{\Dt}{\Dx}\qty(F_{j+\half}^\text{LW} - F_{j-\half}^\text{LW}) \\
+            &= u_j^n - \frac{\Dt}{\Dx}\qty(\frac{a}{2}\qty(u_j^n + u_{j+1}^n) - \frac{a^2\Dt}{2\Dx}\qty(u_{j}^n - u_{j-1}^n) - \frac{a}{2}\qty(u_{j-1}^n + u_j^n) + \frac{a^2\Dt}{2\Dx}\qty(u_j^n - u_{j-1}^n)) \\
+            &= u_j^n - \frac{\Dt}{\Dx}\qty(\frac{a}{2}\qty(u_{j+1}^n - u_{j-1}^n) - \frac{a^2\Dt}{2\Dx}\qty(u_{j+1}^n - 2u_j^n + u_{j+1}^n))
+        \end{align*}
+
+    \section{Preview}
+
+        Suppose $a > 0$.
+        \begin{align*}
+            F_{j+\half}^\text{LW} &= au_j^n - au_j^n + \frac{a}{2}\qty(u_{j+1}^n + u_j^n) - \frac{a^2\Dt}{2\Dx}\qty(u_{j+1}^n - u_j^n) \\
+            &= au_j^n + \frac{a}{2}\qty(u_{j+1}^n - u_j^n) - \frac{a^2\Dt}{2\Dx}\qty(u_{j+1}^n - u_j^n) \\
+            &= \underbrace{au_j^n}_\text{upwinding} + \underbrace{\frac{a}{2}\qty(1 - \nu)\qty(u_{j+1} - u_j^n)}_\text{2nd order correction}
+        \end{align*}
+        So the general form of a high-resolution scheme is
+        \begin{align*}
+            F = F^\text{up} + \qty(F^\text{LW} - F^\text{UP})\phi
+        \end{align*}
+        where $\phi$ is flux limiter that depends on the solution.
+
+\end{document}
+
+
+
+
+
+
+
+
+
+
+
+

@@ -12,10 +12,10 @@ from tqdm import tqdm
 from time import clock
 from operators import make_PR_step_method, make_RK2_step_method
 
-def initial_condition_a(x,y):
+def initial_condition_b(x,y):
     return (np.exp(-100*(x**2 + y**2)), 0*x)
 
-def initial_condition_b(x,y):
+def initial_condition_c(x,y):
     return (1 - 2*x, 0.05*y)
 
 def make_RHS_ODEs(a,I,gamma,epsilon):
@@ -28,7 +28,7 @@ def make_RHS_ODEs(a,I,gamma,epsilon):
     return (f_v,f_w)
 
 def main():
-    dx = 3**(-4)
+    dx = 2**(-7)
     final_time = 600
     dt = 1
     Nx = int(round(1/dx))
@@ -47,25 +47,27 @@ def main():
     xaxis = np.linspace(0,1-dx,Nx) + dx/2
     yaxis = np.linspace(0,1-dx,Nx) + dx/2
     x,y = np.meshgrid(xaxis,yaxis)
-    # (v_0, w_0) = initial_condition_a(x,y)
-    (v_0, w_0) = initial_condition_b(x,y)
+    # (v_0, w_0) = initial_condition_b(x,y)
+    (v_0, w_0) = initial_condition_c(x,y)
 
-    color_choice = cm.Reds
+    color_choice = cm.Blues
     colorbar_min = -0.25
     colorbar_max = 1
     fig = plt.figure()
     ax = fig.add_subplot(111, projection='3d')
     ax.set_zlim(0,1)
     plt.ion()
-    frame = ax.plot_surface(x,y,v_0,cmap=color_choice,vmin=colorbar_min,vmax=colorbar_max,cstride=4,rstride=4)
-    ax.view_init(30,0)
+    frame = ax.plot_surface(x,y,v_0,cmap=color_choice,vmin=colorbar_min,vmax=colorbar_max,cstride=5,rstride=5)
+    fig.colorbar(frame)
+    # ax.view_init(30,0)
     ax.set_xlabel(r"$x$")
     ax.set_ylabel(r"$y$")
     ax.set_zlabel(r"$v$")
     text = ax.text2D(0.05,0.95,r"$t = 0$",transform=ax.transAxes)
-    plt.pause(0.05)
+    # plt.savefig("figures/problem_2c_0.png", type="png", dpi=300)
+    plt.pause(0.01)
 
-    for t in tqdm(xrange(1,Nt+1)):
+    for index, t in tqdm(enumerate(xrange(1,Nt+1))):
         # Half step PR
         v_star = PR_step(v_0)
         w_star = w_0 + 0
@@ -80,13 +82,15 @@ def main():
         # Redefine v_0 and w_0
         v_0 = v_1 + 0
         w_0 = w_1 + 0
-        ax.collections.remove(frame)
-        for txt in ax.texts:
-            txt.set_visible(False)
-        frame = ax.plot_surface(x,y,v_1,cmap=color_choice,vmin=colorbar_min,vmax=colorbar_max,cstride=4,rstride=4)
-        ax.view_init(30,-t)
-        text = ax.text2D(0.05,0.95,r"$t = %.3f$" % (t*dt),transform=ax.transAxes)
-        plt.pause(0.05)
+        if t in [10,25,50,100,150,200,250,300,350,400,450,500,550,600]:
+            ax.collections.remove(frame)
+            for txt in ax.texts:
+                txt.set_visible(False)
+            frame = ax.plot_surface(x,y,v_1,cmap=color_choice,vmin=colorbar_min,vmax=colorbar_max,cstride=5,rstride=5)
+            # ax.view_init(30,-t)
+            text = ax.text2D(0.05,0.95,r"$t = %.3f$" % (t*dt),transform=ax.transAxes)
+            # plt.savefig("figures/problem_2c_%d.png" % (index+1), type="png", dpi=300)
+            plt.pause(0.01)
 
 if __name__ == "__main__":
     main()

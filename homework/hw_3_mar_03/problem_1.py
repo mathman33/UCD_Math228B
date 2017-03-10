@@ -29,7 +29,7 @@ def refinement_study(solutions):
 
 def main():
     max_power = 7
-    dxs = [3**(-i) for i in xrange(1,max_power)]
+    dxs = [3**(-i) for i in xrange(1,max_power+1)]
     transport_coef = 0.1
 
     initials = []
@@ -67,13 +67,13 @@ def main():
         for t in tqdm(xrange(1,Nt+1)):
             u_1 = PR_step(u_0)
             u_0 = u_1 + 0
-            # ax.collections.remove(frame)
-            # for txt in ax.texts:
-            #     txt.set_visible(False)
-            # ax.view_init(30,t*5)
-            # frame = ax.plot_surface(x,y,u_1.todense(),cstride=4,rstride=4)
-            # text = ax.text2D(0.05,0.95,r"$t = %.3f$" % (t*dt),transform=ax.transAxes)
-            # plt.pause(0.05)
+        #     ax.collections.remove(frame)
+        #     for txt in ax.texts:
+        #         txt.set_visible(False)
+        #     ax.view_init(30,t*5)
+        #     frame = ax.plot_surface(x,y,u_1,cstride=4,rstride=4)
+        #     text = ax.text2D(0.05,0.95,r"$t = %.3f$" % (t*dt),transform=ax.transAxes)
+        #     plt.pause(0.05)
         # plt.close()
         # garbage.collect()
         solutions.append(u_1)

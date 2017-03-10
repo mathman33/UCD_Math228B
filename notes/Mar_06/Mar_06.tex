@@ -1,0 +1,153 @@
+\documentclass{article}
+
+
+\usepackage[margin=0.6in]{geometry}
+\usepackage{amssymb, amsmath, amsfonts}
+\usepackage{tabularx}
+\usepackage{arydshln}
+\usepackage{mathtools}
+\usepackage{changepage}
+\usepackage{asymptote}
+\usepackage{cancel}
+\usepackage{physics}
+\usepackage{pgf}
+\usepackage{enumerate}
+\usepackage{placeins}
+\usepackage{nth}
+\usepackage{array}
+\usepackage{tikz}
+\usetikzlibrary{arrows,automata}
+\tikzset{
+  saveuse path/.code 2 args={
+    \pgfkeysalso{#1/.style={insert path={#2}}}%
+    \global\expandafter\let\csname pgfk@\pgfkeyscurrentpath/.@cmd\expandafter\endcsname
+      % not optimal as it is now global through out the document
+                           \csname pgfk@\pgfkeyscurrentpath/.@cmd\endcsname
+    \pgfkeysalso{#1}},
+  /pgf/math set seed/.code=\pgfmathsetseed{#1}}
+\usepackage{nicefrac}
+\usepackage{pgfplots}
+\usepgfplotslibrary{polar}
+\pgfplotsset{holdot/.style={fill=white,only marks,mark=*}}
+\pgfplotsset{soldot/.style={only marks,mark=*}}
+\newcommand{\enth}{$n$th}
+\newcommand{\Rl}{\mathbb{R}}
+\newcommand{\Cx}{\mathbb{C}}
+\newcommand{\sgn}[1]{\text{sgn}\qty[#1]}
+\newcommand{\ran}[1]{\text{ran}\qty[#1]}
+\newcommand{\E}{\varepsilon}
+\newcommand{\qiq}{\qquad \implies \qquad}
+\newcommand{\half}{\nicefrac{1}{2}}
+\newcommand{\third}{\nicefrac{1}{3}}
+\newcommand{\quarter}{\nicefrac{1}{4}}
+\newcommand{\f}[3]{#1\ :\ #2 \rightarrow #3}
+\newcommand{\Dx}{\Delta x}
+\newcommand{\Dy}{\Delta y}
+\newcommand{\Dt}{\Delta t}
+\newcommand{\Dphi}{\Delta \phi}
+\newcommand{\hot}{\text{h.o.t.}}
+\newcommand{\centdiff}{\frac{u_j^{n+1} - u_j^n}{\Dt}}
+\newcommand{\dod}{Domain of Depdendence}
+
+\newcommand{\tridsym}[3]{
+    \qty(\begin{array}{ccccc}
+                    #1 & #2 & & & \\
+                    #3 & #1 & #2 & & \\
+                    & \ddots & \ddots & \ddots &  \\
+                    & & #3 & #1 & #2 \\
+                    & & & #3 & #1
+                \end{array})
+}
+
+
+\DeclareMathOperator*{\esssup}{\text{ess~sup}}
+
+\title{MAT 228B Notes}
+\author{Sam Fleischer}
+\date{March 6, 2017}
+
+\begin{document}
+    \maketitle
+
+    \section{Amplitude and Phase Errors}
+        \begin{itemize}
+            \item Von Neumann Analysis gives
+            \begin{align*}
+                \hat{u}^{n+1} = g(\xi)\hat{u}^n
+            \end{align*}
+            We look at $\abs{g(\xi)}$ as a function of $\xi$ to quantify amplitude error.
+            \item Set $\theta = \xi\Dx$.  In the limit of small $\theta$, upwinding $\abs{g(\theta)} = 1 - \frac{1}{2}\qty(\nu - \nu^2)\theta^2 + \order{\theta^4}$.  So this is second-order per step (first-order in amplitude).
+            \item Lax-Windrof $\abs{g(\theta)} = 1 - \frac{1}{8}\qty(\nu^2 - \nu^4)\theta^4 + \order{\theta^6}$.  So this is fourth-order per step (third-order in amplitude).
+            \item What is the phase error? $u = 1\cdot e^{-\xi(x - at)}$ (amplitude $1$) is a solution to $u_t + au_x = 0$.  We have $\text{Re(u)} = A\cos(x - at)$.  We have the real phase is translating.  In one timestep, how much does the phase change?
+            \item Let $\Dphi \coloneqq $ phase change per timestep.
+            \begin{align*}
+                \Dphi = \xi(x - a(t + \Dt)) - \xi(x - at) = -\xi a\Dt = -\frac{\theta}{\Dx}a\Dt = -\nu\theta
+            \end{align*}
+            \item Anyway,
+            \begin{align*}
+                g(\theta) = \abs{g}e^{i\phi}
+            \end{align*}
+            where $\phi = \arg(g)$.  So, the numerical scheme changes the phase of a wave with wavenumber $\theta$ by some $\phi(\theta)$.
+            \item So, the relative phase of the numerical scheme can be computed by $\frac{\phi(\theta)}{\Dphi}$.  This is the phase change in the numerical scheme divided by the phase change in the PDE.
+            \item For smooth modes, what does this relative phase look like?
+            \begin{itemize}
+                \item For upwinding, relative phase is $1 - \frac{1}{6}\qty(1 - \nu)(1 - 2\nu)\theta^2 + \hot$.
+                \item For LW, relative phase is $1 - \frac{1}{6}(1 - \nu^2)\theta^2 + \hot$.
+            \end{itemize}
+            \item So if it's smooth we want to do LW, but if it's not so smooth we should do upwinding.  We will get to a method that switches between these two based on the given data.
+        \end{itemize}
+
+    \section{Boundary Conditions}
+        \begin{itemize}
+            \item Look at $u_t + au_x = 0$ on $(0,1)$ ($a > 0$) with boundary conditions...
+            \item Regardless of boundary conditions, we should expect things to advect to the right.  We need a boundary condition at $x = 0$.
+            \item Set initial condition $u(x,0) = u_0(x)$ and boundary condition $u(0,t) = g(t)$.  We don't need a boundary condition at $x = 1$.  No boundary condition at outflow - only at inflow.
+            \item How do we deal with the fact that the solution is given at $x = 0$ and unknown at $x = 1$?  Depends on the scheme.
+            \begin{itemize}
+                \item For upwinding,
+                \begin{align*}
+                    u_j^{n+1} = u_j^n - \frac{\Dt a}{\Dx}\qty(u_j^n - u_{j-1}^n)
+                \end{align*}
+                so we don't need to do anything special since $u_j$ does not depend on $u_{j+1}$.
+                \item Method of Lines upwinding..
+                \begin{align*}
+                    \frac{\dd u}{\dd t} = -\frac{a\Dt}{\Dx}\tridsym{1}{0}{-1}u + \qty(\begin{array}{c}
+                        ? \\ ? \\ ? \\ ? \\ ?
+                    \end{array})
+                \end{align*}
+                \item For Lax-Windroff,
+                \begin{align*}
+                    u_j^{n+1} = u_j^n - \frac{a\Dt}{\Dx}\qty(u_{j+1}^n - u_{j-1}^n) - \frac{a^2\Dt^2}{2\Dx^2}\qty(u_{j+1}^n - 2u_j^n + u_{j-1}^n)
+                \end{align*}
+                This poses a problem at the outflow boundary since $u_j$ is dependent on $u_{j+1}$.  We need to modify this at the outflow boundary.  We could perhaps do upwinding at that point.... or we could extrapolate (linear? constant? something else? upwinding is some kind of extrapolation..) to outside the domain (done most commonly in practice).
+            \end{itemize}
+        \end{itemize}
+
+    \section{Systems of Equations}
+        \begin{align*}
+            \vec{u}_t + A\vec{u}_x = 0
+        \end{align*}
+        e.g.~$u_{tt} = c^2u_{xx}$.  We can write that as a system of the above form with the change of variables
+        \begin{align*}
+            \vec{u} = \qty(\begin{array}{c} u_t \\ u_x \end{array})
+        \end{align*}
+        so
+        \begin{align*}
+            \vec{u} + \qty(\begin{array}{cc} 0 & c^2 \\ 1 & 0\end{array})\vec{u} = 0
+        \end{align*}
+
+        How do we tackle this using the methods we have?  Upwinding?  Which way is the wind blowing (need eigen-decomposition).  Lax Windroff will undergo lots of changes.. next time.
+
+\end{document}
+
+
+
+
+
+
+
+
+
+
+
+

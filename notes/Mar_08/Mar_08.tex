@@ -1,0 +1,177 @@
+\documentclass{article}
+
+
+\usepackage[margin=0.6in]{geometry}
+\usepackage{amssymb, amsmath, amsfonts}
+\usepackage{tabularx}
+\usepackage{arydshln}
+\usepackage{mathtools}
+\usepackage{changepage}
+\usepackage{asymptote}
+\usepackage{cancel}
+\usepackage{physics}
+\usepackage{pgf}
+\usepackage{enumerate}
+\usepackage{placeins}
+\usepackage{nth}
+\usepackage{array}
+\usepackage{tikz}
+\usetikzlibrary{arrows,automata}
+\tikzset{
+  saveuse path/.code 2 args={
+    \pgfkeysalso{#1/.style={insert path={#2}}}%
+    \global\expandafter\let\csname pgfk@\pgfkeyscurrentpath/.@cmd\expandafter\endcsname
+      % not optimal as it is now global through out the document
+                           \csname pgfk@\pgfkeyscurrentpath/.@cmd\endcsname
+    \pgfkeysalso{#1}},
+  /pgf/math set seed/.code=\pgfmathsetseed{#1}}
+\usepackage{nicefrac}
+\usepackage{pgfplots}
+\usepgfplotslibrary{polar}
+\pgfplotsset{holdot/.style={fill=white,only marks,mark=*}}
+\pgfplotsset{soldot/.style={only marks,mark=*}}
+\newcommand{\enth}{$n$th}
+\newcommand{\Rl}{\mathbb{R}}
+\newcommand{\Cx}{\mathbb{C}}
+\newcommand{\sgn}[1]{\text{sgn}\qty[#1]}
+\newcommand{\ran}[1]{\text{ran}\qty[#1]}
+\newcommand{\E}{\varepsilon}
+\newcommand{\qiq}{\qquad \implies \qquad}
+\newcommand{\half}{\nicefrac{1}{2}}
+\newcommand{\third}{\nicefrac{1}{3}}
+\newcommand{\quarter}{\nicefrac{1}{4}}
+\newcommand{\f}[3]{#1\ :\ #2 \rightarrow #3}
+\newcommand{\Dx}{\Delta x}
+\newcommand{\Dy}{\Delta y}
+\newcommand{\Dt}{\Delta t}
+\newcommand{\Dphi}{\Delta \phi}
+\newcommand{\hot}{\text{h.o.t.}}
+\newcommand{\centdiff}{\frac{u_j^{n+1} - u_j^n}{\Dt}}
+\newcommand{\dod}{Domain of Depdendence}
+
+\newcommand{\tridsym}[3]{
+    \qty(\begin{array}{ccccc}
+                    #1 & #2 & & & \\
+                    #3 & #1 & #2 & & \\
+                    & \ddots & \ddots & \ddots &  \\
+                    & & #3 & #1 & #2 \\
+                    & & & #3 & #1
+                \end{array})
+}
+
+
+\DeclareMathOperator*{\esssup}{\text{ess~sup}}
+
+\title{MAT 228B Notes}
+\author{Sam Fleischer}
+\date{March 8, 2017}
+
+\begin{document}
+    \maketitle
+
+    \section{Systems of Equations}
+
+        Consider $u_t + Au_x = 0$ where $A$ is a diagonalizable matrix with real eigenvalues.  Then $A = V\Lambda V^{-1}$, so
+        \begin{align*}
+            u_t + V\Lambda V^{-1}u_x &= 0 \\
+            V^{-1}u_t + \Lambda V^{-1}u_x &= 0
+        \end{align*}
+        Defining $w = V^{-1}u$ gives
+        \begin{align*}
+            w_t + \Lambda w_x = 0
+        \end{align*}
+        which is a set of de-coupled advection equations (one for each eigenspace).  So upwind, use the sign of the elements of $\lambda$.  Now define $\Lambda^+$ and $\Lambda^-$ as
+        \begin{align*}
+            \Lambda^+ = \frac{\Lambda + \abs{\Lambda}}{2} \\
+            \Lambda^- = \frac{\Lambda - \abs{\Lambda}}{2}
+        \end{align*}
+        This helps with notation:
+        \begin{align*}
+            w_j^{n+1} = w_j^n - \frac{\Dt}{\Dx}\Lambda^+\qty(w_j^n - w_{j-1}^n) - \frac{\Dt}{\Dx}\Lambda^-\qty(w_{j+1}^n - w_j^n)
+        \end{align*}
+        Back to original variables:
+        \begin{align*}
+            u_j^{n+1} = u_j^n - \frac{\Dt}{\Dx}A^+\qty(u_j^n - u_{j-1}^n) - \frac{\Dt}{\Dx}A^-\qty(u_{j+1}^n - u_j^n)
+        \end{align*}
+        where $A^+ = V\Lambda^+V^{-1}$ and $A^- = V\Lambda^-V^{-1}$.  \emph{Note: for nonlinear or variable coefficient problems, we would decompose these differences locally ``into left-moving stuff and right-moving stuff''.}
+
+    \section{Conservation Laws and Finite Volume Methods}
+
+        This is not in the book.  The general form of a conservation law is
+        \begin{align*}
+            u_t + \qty(f(u))_x = 0
+        \end{align*}
+        where $f$ is a flux function.  If $f(u) = au$, we recover the advection equation.  If $f(u) = \frac{1}{2}u^2$, then $f'(u) = u$, so we recover $u_t + u u_x = 0$ (inviscid Burgers equation (model problem for nonlinear conservation laws - develops shocks etc.~in finite time)). \\
+
+        Remember the integral form of the conservation law is
+        \begin{align*}
+            \frac{\dd}{\dd t}\int_{x_1}^{x_2}u \dd x = f(u(x_1,t)) - f(u(x_2,t))
+        \end{align*}
+        If $u$ is a density, the the integral is the ``total amount of stuff'' in the interval $[x_1,x_2]$.  ``Technically, stuff changes only from movement across the boundary.''  How do we deal with an integral conservation law numerically?
+
+        \subsection{Finite Volume Methods}
+
+            In a finite-difference method, when we write $u_j$, we mean this is an approximation of $u(x_j)$.  We are using approximate values of the function in our scheme.  In a finite-volume method, we don't divide the space into a set of points.  Rather, we divide the domain into a set of volumes $c_j$.  In 1D, for finite-difference methods, we consider points $x_j$, but for finite-volume methods, we consider volumes $c_j = \qty[x_{j-\half}, x_{j+\half}]$.  We will let $$u_j \approx \frac{1}{\abs{c_j}}\int_{c_j}u(x)\dd x,$$ i.e.~the average value of the function over the volume $c_j$.  In 1D this looks like
+            \begin{align*}
+                u_j = \frac{1}{\Dx}\int_{x_{j-\half}}^{x_{j+\half}}u(x)\dd x
+            \end{align*}
+            Note that
+            \begin{align*}
+                \frac{1}{\Dx}\int_{x_{j-\half}}^{x_{j+\half}}u(x)\dd x = u(x_j) + \order{\Dx}^2
+            \end{align*}
+            using midpoint rule and numerical quadrature.  $u$ at the center is a 2nd-order accurate approximation to the average (and vice-versa).
+
+            What is the conservation Law on $c_j$?
+            \begin{align*}
+                \frac{\dd}{\dd t}\int_{x_{j-\half}}^{x_{j+\half}}u(x)\dd x = f(u({x_{j-\half}}),t) + f(u({x_{j+\half}}),t)
+            \end{align*}
+            Integrating in time from $t_n$ to $t_{n+1}$ gives
+            \begin{align*}
+                \Dx\qty(u_j^{n+1} - u_j^n) &= \int_{t_n}^{t_{n+1}} f(u(x_{j-\half},t)) - f(u(x_{j+\half},t)) \dd t
+            \end{align*}
+            Let $F_{j+\half} \coloneqq \frac{1}{\Dt^2}\int_{t_n}^{t_{n+1}}F(u(x_{j+\half},t))\dd t$.  Also, note
+            \begin{align*}
+                \Dx\qty(u_j^{n+1} - u_j^n) &= \Dt\qty(F_{j-\half} - F_{j+\half}) \\
+                u_j^{n+1} &= u_j^n - \frac{\Dt}{\Dx}\qty(F_{j-\half}{F_{j+\half}}) \\
+                \frac{u_j^{n+1} - u_j^n}{\Dt} + \frac{F_{j+\half} - F_{j-\half}}{\Dx} &= 0
+            \end{align*}
+            We also have
+            \begin{align*}
+                \frac{1}{\Dx}\int_{x_{j-\half}}^{x_{j+\half}}u(x,t_n)\dd x = u_j^n.
+            \end{align*}
+            With these averages, this equation is exact - no approximations.
+
+            Next, the approximation enters in the numerical flux function.  Suppose $f(u) = au$.
+
+            \subsubsection{Upwinding}
+
+                \begin{align*}
+                    F_{j+\half}^n = \begin{cases}
+                        au_j & \text{ if } a \geq 0\\
+                        au_{j+1} & \text{ if } a \leq 0
+                    \end{cases}
+                \end{align*}
+                Supposing $a > 0$, then
+                \begin{align*}
+                    u_j^{n+1} = u_j^n - \frac{\Dt}{\Dx}\qty(a u_j- au_{j-1}^n)
+                \end{align*}
+
+            \subsubsection{Two-Step Lax-Wendroff}
+
+                We predict $$u_{j+\half}^{n+\half} = \frac{1}{2}\qty(u_j^n + u_{j+1}^n) - \frac{\Dt}{2\Dx}\qty(f({u_{j+1}^n}) - f^n(u_j)).$$  Anyway,
+                \begin{align*}
+                    F_{j+\half}^{n+\half} = f(u_{j+\half}^{n+\half})
+                \end{align*}
+\end{document}
+
+
+
+
+
+
+
+
+
+
+
+

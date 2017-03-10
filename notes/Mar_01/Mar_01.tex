@@ -1,0 +1,140 @@
+\documentclass{article}
+
+
+\usepackage[margin=0.6in]{geometry}
+\usepackage{amssymb, amsmath, amsfonts}
+\usepackage{tabularx}
+\usepackage{arydshln}
+\usepackage{mathtools}
+\usepackage{changepage}
+\usepackage{asymptote}
+\usepackage{cancel}
+\usepackage{physics}
+\usepackage{pgf}
+\usepackage{enumerate}
+\usepackage{placeins}
+\usepackage{nth}
+\usepackage{array}
+\usepackage{tikz}
+\usetikzlibrary{arrows,automata}
+\tikzset{
+  saveuse path/.code 2 args={
+    \pgfkeysalso{#1/.style={insert path={#2}}}%
+    \global\expandafter\let\csname pgfk@\pgfkeyscurrentpath/.@cmd\expandafter\endcsname
+      % not optimal as it is now global through out the document
+                           \csname pgfk@\pgfkeyscurrentpath/.@cmd\endcsname
+    \pgfkeysalso{#1}},
+  /pgf/math set seed/.code=\pgfmathsetseed{#1}}
+\usepackage{nicefrac}
+\usepackage{pgfplots}
+\usepgfplotslibrary{polar}
+\pgfplotsset{holdot/.style={fill=white,only marks,mark=*}}
+\pgfplotsset{soldot/.style={only marks,mark=*}}
+\newcommand{\enth}{$n$th}
+\newcommand{\Rl}{\mathbb{R}}
+\newcommand{\Cx}{\mathbb{C}}
+\newcommand{\sgn}[1]{\text{sgn}\qty[#1]}
+\newcommand{\ran}[1]{\text{ran}\qty[#1]}
+\newcommand{\E}{\varepsilon}
+\newcommand{\qiq}{\qquad \implies \qquad}
+\newcommand{\half}{\nicefrac{1}{2}}
+\newcommand{\third}{\nicefrac{1}{3}}
+\newcommand{\quarter}{\nicefrac{1}{4}}
+\newcommand{\f}[3]{#1\ :\ #2 \rightarrow #3}
+\newcommand{\Dx}{\Delta x}
+\newcommand{\Dy}{\Delta y}
+\newcommand{\Dt}{\Delta t}
+\newcommand{\hot}{\text{h.o.t.}}
+\newcommand{\centdiff}{\frac{u_j^{n+1} - u_j^n}{\Dt}}
+\newcommand{\dod}{Domain of Depdendence}
+
+\newcommand{\tridsym}[3]{
+    \qty(\begin{array}{ccccc}
+                    #1 & #2 & & & \\
+                    #3 & #1 & #2 & & \\
+                    & \ddots & \ddots & \ddots &  \\
+                    & & #3 & #1 & #2 \\
+                    & & & #3 & #1
+                \end{array})
+}
+
+
+\DeclareMathOperator*{\esssup}{\text{ess~sup}}
+
+\title{MAT 228B Notes}
+\author{Sam Fleischer}
+\date{March 1, 2017}
+
+\begin{document}
+    \maketitle
+
+    \section{Last Time}
+        For smooth data, Upwinding dampened a lot less than Lax-Friedrichs.  Lax-Windroff didn't damp but there was a phase shift.  For discontinuous data, Lax-Windroff created wiggles to the left of the discontinuity and those wiggles didn't seem to disappear as the mesh was refined.
+
+    \section{Modified Equations}
+        We take a PDE and modify it to be a difference equation.  We make a scheme to solve them and observed behavior in the difference soltions not present in the solution of the PDE.  So what is the PDE which describes the behavior of the difference equations (weird..)?  This is the modified equation.
+
+    \section{Upwinding for $a > 0$}
+        \begin{align*}
+            u_j^{n+1} &= u_j^n - \frac{a\Dt}{\Dx}\qty(u_j^n - u_{j-1}^n) \\
+            \centdiff + \frac{a}{\Dx}\qty(u_j^n - u_{j-1}^n) &= 0
+        \end{align*}
+        Now, let $v(x,t)$ be a smooth function which satisfies the difference equations.  This means
+        \begin{align*}
+            \frac{v(x,t+\Dt) - v(x,t)}{\Dt} + a\qty(\frac{v(x,t) - v(x - \Dx,t)}{\Dx}) &= 0
+        \end{align*}
+        Expanding $v$ for small $\Dx$ and $\Dt$ gives
+        \begin{align}
+            v_t + \frac{1}{2}\Dt v_{tt} + \frac{1}{6}\Dt^2v_{ttt} + \order{\Dt^3} + a\qty(v_x - \frac{\Dx}{2}v_{xx} + \frac{\Dx^2}{6}v_{xxx} + \order{\Dx^3}) &= 0
+        \end{align}
+        Assuming $\Dt = \order{\Dx}$, we get
+        \begin{align}
+            v_t + a v_x + \qty(\frac{1}{2}\Dt v_{tt} - \frac{a\Dx}{2}v_{xx}) + \qty(\frac{1}{6}\Dt^2v_{ttt} + \frac{a\Dx^2}{6}v_{xxx}) + \qty(\order{\Dt^3} + \order{\Dx^2}) &= 0
+        \end{align}
+        If we truncate to first-order, we get
+        \begin{align}
+            v_t + av_x &= -\frac{1}{2}\qty(\Dt v_{tt} - a\Dx v_{xx})
+        \end{align}
+        Upwinding is a first order approximation to $u_t + au_x = 0$ but it is a second-order approximation.  Taking some derivatives give
+        \begin{align}
+            v_{tt} &= -av_{tx} +\order{\Dt} \qquad \qquad v_{tx} = -av_{xx} + \order{\Dt}
+        \end{align}
+        So,
+        \begin{align}
+            v_{tt} &= a^2v_{xx} + \order{\Dt}
+        \end{align}
+        Finally,
+        \begin{align}
+            v_t + av_x &= \frac{1}{2}\qty(a\Dx - \Dt a^2)v_{xx} + \order{\Dt^2} \\
+            v_t + av_x &= \underbrace{\frac{a\Dx}{2}\qty(1 - \nu)}_{\text{explains the damning and smearing in upwinding}}v_{xx}
+        \end{align}
+        {\color{red} Assinging $D_{\text{up}} = \frac{a\Dx}{2}\qty(1 - \nu)$, then as $\Dt, \Dx \rightarrow 0$, ThenFor $D_{\text{up}}$}
+
+
+    \section{Lax-Freidrichj}
+        We get $$v_t + av_x + \frac{\Dx^2}{2\Dt}\qty(1 - \nu^2)V_{xx} = D_\text{LF}v_{xx}$$
+        Then since this close to $1$, we find $D_{up} \approx 2.0\text{20:preserpara{\mu p}$.  Lax-Windroff also get third-order accurate solution to 
+        \begin{align}
+            v_t + a v_x = \frac{a\Dx^2}{6}\qty(\nu^2 - 1)v_{xxx} \\
+            v_t -a v_x &= \mu v_{xxx}
+        \end{align}
+        We can solve with the Forier Transform
+        \begin{align}
+            \hat{v}_t + ai\xi\hat{v} = -\mu i\xi^4\\getV]\tabularnewline
+            \hat{v}_t \= -\qty(ai\xi) - \mu i \xi^3 {+ ai\xi\hat{v} = -\mu i\xi^4\\getV]\tabularnewline}
+            
+        \end{align}
+
+\end{document}
+
+
+
+
+
+
+
+
+
+
+
+

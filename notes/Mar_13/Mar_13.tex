@@ -1,0 +1,163 @@
+\documentclass{article}
+
+
+\usepackage[margin=0.6in]{geometry}
+\usepackage{amssymb, amsmath, amsfonts}
+\usepackage{tabularx}
+\usepackage{arydshln}
+\usepackage{mathtools}
+\usepackage{changepage}
+\usepackage{asymptote}
+\usepackage{cancel}
+\usepackage{physics}
+\usepackage{pgf}
+\usepackage{enumerate}
+\usepackage{placeins}
+\usepackage{nth}
+\usepackage{array}
+\usepackage{tikz}
+\usetikzlibrary{arrows,automata}
+\tikzset{
+  saveuse path/.code 2 args={
+    \pgfkeysalso{#1/.style={insert path={#2}}}%
+    \global\expandafter\let\csname pgfk@\pgfkeyscurrentpath/.@cmd\expandafter\endcsname
+      % not optimal as it is now global through out the document
+                           \csname pgfk@\pgfkeyscurrentpath/.@cmd\endcsname
+    \pgfkeysalso{#1}},
+  /pgf/math set seed/.code=\pgfmathsetseed{#1}}
+\usepackage{nicefrac}
+\usepackage{pgfplots}
+\usepgfplotslibrary{polar}
+\pgfplotsset{holdot/.style={fill=white,only marks,mark=*}}
+\pgfplotsset{soldot/.style={only marks,mark=*}}
+\newcommand{\enth}{$n$th}
+\newcommand{\Rl}{\mathbb{R}}
+\newcommand{\Cx}{\mathbb{C}}
+\newcommand{\sgn}[1]{\text{sgn}\qty[#1]}
+\newcommand{\ran}[1]{\text{ran}\qty[#1]}
+\newcommand{\E}{\varepsilon}
+\newcommand{\qiq}{\qquad \implies \qquad}
+\newcommand{\half}{\nicefrac{1}{2}}
+\newcommand{\third}{\nicefrac{1}{3}}
+\newcommand{\quarter}{\nicefrac{1}{4}}
+\newcommand{\f}[3]{#1\ :\ #2 \rightarrow #3}
+\newcommand{\Dx}{\Delta x}
+\newcommand{\Dy}{\Delta y}
+\newcommand{\Dt}{\Delta t}
+\newcommand{\Dphi}{\Delta \phi}
+\newcommand{\hot}{\text{h.o.t.}}
+\newcommand{\centdiff}{\frac{u_j^{n+1} - u_j^n}{\Dt}}
+\newcommand{\dod}{Domain of Depdendence}
+
+\newcommand{\tridsym}[3]{
+    \qty(\begin{array}{ccccc}
+                    #1 & #2 & & & \\
+                    #3 & #1 & #2 & & \\
+                    & \ddots & \ddots & \ddots &  \\
+                    & & #3 & #1 & #2 \\
+                    & & & #3 & #1
+                \end{array})
+}
+
+
+\DeclareMathOperator*{\esssup}{\text{ess~sup}}
+
+\title{MAT 228B Notes}
+\author{Sam Fleischer}
+\date{March 13, 2017}
+
+\begin{document}
+    \maketitle
+
+    \section{Avoiding Wiggles}
+
+        \begin{itemize}
+            \item Suppose $u_j^0 \geq u_{j+1}^0$ for all $j$.  If $u_j^n \geq u_{j+1}^n$ for all $j$ and $n$, then the scheme is monotone-preserving.
+            \item Godunov's Theorem - A linear monotonicity preserving scheme is at most first-order accurate.
+            \item Idea: To get higher-order accuracy and not get wiggles, we need to use a non-linear scheme.
+            \item For example: $$F_{j+\half} = F_{j +\half}^\text{up} + \qty(F_{j+\half}^\text{LW} - F_{j+\half}^\text{up})\phi(u^n)$$ where $\phi$ is a ``flux limiter.''  We have a nonlinear scheme, even for a linear PDE.
+            \item Let $u_t + (f(u))_x = 0$.  Godunov's Method (an REA (reconstruct, evolve, average) method) is
+            \begin{enumerate}
+                \item Reconstruct a function from cell averages.
+                \begin{itemize}
+                    \item Given $u_j^n$, get $\tilde{u}(x,t_n)$.
+                    \item For example: piecewise-constant reconstruction.
+                \end{itemize}
+                \item Evolve.
+                \begin{itemize}
+                    \item Solve the PDE exactly using the reconstruction as initial data.
+                \end{itemize}
+                \item Average on each cell to update the averages.
+                \begin{itemize}
+                    \item Set $\displaystyle u_J^{n+1} = \frac{1}{\Dx}\int_{x-\half}^{x+\half}\tilde{u}(x,t_{n+1})\dd x$
+                \end{itemize}
+            \end{enumerate}
+            \item Example: Advection with $a > 0$, $\nu \leq 1$.
+            \begin{itemize}
+                \item Remember $$u_j^{n+1} = u_j^n - \frac{\Dt}{\Dx}\qty(F_{j+\half}^{n} - F_{j-\half}^n).$$
+                \item We only need $u(x_{j+\half},t)$ to compute the $u_J^{n+1}$ using the above equation, and $F_{j+\half} = \frac{1}{\Dt}\int_{t_n}^{t_{n+1}}f(\tilde{u}(x_{j+\half},t))\dd t$.
+                \item So $\tilde{u}(x_{j+\half},t) = u_j^n$.
+                \item $F_{j+\half}^n = au_j^n$ (this is upwinding)
+            \end{itemize}
+            \item We can generalize to a nonlinear problem $$u_t + \qty(f(u))_x = 0$$ and
+            \begin{align*}
+                u(x,0) = \begin{cases}
+                    u_\ell & x < 0 \\
+                    u_r & x > 0
+                \end{cases}
+            \end{align*}
+            This is a Riemann problem.
+        \end{itemize}
+
+    \section{Higher-Order Accuracy}
+        \begin{itemize}
+            \item We can do a more accuracte reconstruction than piecewise constant.  How about piecewise linear?  But remember we need to preserve the averages.
+            \begin{align*}
+                \tilde{u}(x,t_n) = u_j^n + \sigma_j^n\underbrace{\qty(x - x_j)}_{0 \text{ average}} \qquad x_{j-\half} \leq x \leq x_{j+\half}
+            \end{align*}
+            \item So the average on the cell is independent from $\sigma$ (independent of slope).
+            \item What slope do we pick?
+            \begin{itemize}
+                \item $\sigma_j^n = 0$ this is upwinding
+                \item $?$ force continuity?
+                \item $\sigma_j^n = \frac{u_{j+1}^n - u_{j-1}^n}{2\Dx}$ (centered, Fromm's method)
+                \item $\sigma_j^n = \frac{u_{j+1}^n - u_j^n}{\Dx}$, downward slope (Lax-Wendroff)
+                \item $\sigma_j^n = \frac{u_j - u_{j-1}}{\Dx}$ (upwind difference, beam-warming).
+            \end{itemize}
+            \item Considering $a > 0$, using LW slope for
+            \begin{align*}
+                u_j^n = \begin{cases}
+                    1 & j \leq J \\
+                    0 & j > J
+                \end{cases}
+            \end{align*}
+            This immediately introduces an overshoot behijnd the jump, killing monotonicity.  So Lax-Wendroff gives wiggles behind, Fromm's method gives wiggles on both siedes (but they're half as off), and Beam-Warming gives wiggles in front of the discontinuity.
+            \item BUT!  You can pick different slopes at each interval!
+            \item No wiggles if we pick Lax-Wendroff to the right of the jump and beam-warming to the left.  To avoid oscillations, use so-called ``limited slope''
+            \item ``Minmod'' slope
+            \begin{align*}
+                u_j^n = \text{minmod}\qty(\frac{u_j - u_{j-1}}{\Dx},\frac{u_{j-1} - u_j}{\Dx})
+            \end{align*}
+            where
+            \begin{align*}
+                \text{minmod}(a,b) = \min(\abs{a},\abs{b})
+            \end{align*}
+            A different choice monotonized centered slope
+            \begin{align*}
+                \sigma_j^n = \text{minmod}\qty(\frac{u_{j+1}-u_{j-1}}{2\Dx},2\qty(\frac{u_{j+1} - u_j}{\Dx}),2\qty(\frac{u_j - u_{j-1}}{\Dx}))
+            \end{align*}
+        \end{itemize}
+
+\end{document}
+
+
+
+
+
+
+
+
+
+
+
+

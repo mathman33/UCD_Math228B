@@ -1,0 +1,169 @@
+\documentclass{article}
+
+
+\usepackage[margin=0.6in]{geometry}
+\usepackage{amssymb, amsmath, amsfonts}
+\usepackage{tabularx}
+\usepackage{arydshln}
+\usepackage{mathtools}
+\usepackage{changepage}
+\usepackage{asymptote}
+\usepackage{cancel}
+\usepackage{physics}
+\usepackage{pgf}
+\usepackage{enumerate}
+\usepackage{placeins}
+\usepackage{nth}
+\usepackage{array}
+\usepackage{tikz}
+\usetikzlibrary{arrows,automata}
+\tikzset{
+  saveuse path/.code 2 args={
+    \pgfkeysalso{#1/.style={insert path={#2}}}%
+    \global\expandafter\let\csname pgfk@\pgfkeyscurrentpath/.@cmd\expandafter\endcsname
+      % not optimal as it is now global through out the document
+                           \csname pgfk@\pgfkeyscurrentpath/.@cmd\endcsname
+    \pgfkeysalso{#1}},
+  /pgf/math set seed/.code=\pgfmathsetseed{#1}}
+\usepackage{nicefrac}
+\usepackage{pgfplots}
+\usepgfplotslibrary{polar}
+\pgfplotsset{holdot/.style={fill=white,only marks,mark=*}}
+\pgfplotsset{soldot/.style={only marks,mark=*}}
+\newcommand{\enth}{$n$th}
+\newcommand{\Rl}{\mathbb{R}}
+\newcommand{\Cx}{\mathbb{C}}
+\newcommand{\sgn}[1]{\text{sgn}\qty[#1]}
+\newcommand{\ran}[1]{\text{ran}\qty[#1]}
+\newcommand{\E}{\varepsilon}
+\newcommand{\qiq}{\qquad \implies \qquad}
+\newcommand{\half}{\nicefrac{1}{2}}
+\newcommand{\third}{\nicefrac{1}{3}}
+\newcommand{\quarter}{\nicefrac{1}{4}}
+\newcommand{\f}[3]{#1\ :\ #2 \rightarrow #3}
+\newcommand{\Dx}{\Delta x}
+\newcommand{\Dy}{\Delta y}
+\newcommand{\Dt}{\Delta t}
+\newcommand{\Dphi}{\Delta \phi}
+\newcommand{\hot}{\text{h.o.t.}}
+\newcommand{\centdiff}{\frac{u_j^{n+1} - u_j^n}{\Dt}}
+\newcommand{\dod}{Domain of Depdendence}
+
+\newcommand{\tridsym}[3]{
+    \qty(\begin{array}{ccccc}
+                    #1 & #2 & & & \\
+                    #3 & #1 & #2 & & \\
+                    & \ddots & \ddots & \ddots &  \\
+                    & & #3 & #1 & #2 \\
+                    & & & #3 & #1
+                \end{array})
+}
+
+
+\DeclareMathOperator*{\esssup}{\text{ess~sup}}
+
+\title{MAT 228B Notes}
+\author{Sam Fleischer}
+\date{March 15, 2017}
+
+\begin{document}
+    \maketitle
+
+    \section{Flux Limiters}
+
+        \begin{itemize}
+            \item Set $\tilde{u} = u_j^n + \sigma_j^n\qty(x - x_j)$.
+            \item We have a lot of freedom over how we choose the slope on each cell.
+            \item Consider the advection equation with $a > 0$.
+            \item We compute the flux through the $j - \half$ edge.
+            \begin{align*}
+                F_{j-\half}^n &= \frac{1}{\Dt}\int_{t_n}^{t_{n+1}}f(\tilde{u}(x_{j-\half},t))\dd t \\
+                &= \frac{1}{\Dt}\int_{t_n}^{t_{n+1}}a\tilde{u}(x_{j-\half},t)\dd t \\
+                &= \frac{1}{\Dt}\int_{t_n}^{t_{n+1}}a\qty(u_{j-1}^n + \sigma_{j-1}^n\qty(x_{j-\half} - a\qty(t - t_n) - x_{j-1}))\dd t \\
+                &= au_{j-1}^n + a\sigma_{j-1}^n\qty(\frac{\Dx}{2} - a\frac{\Dt}{2}) \\
+                &= \underbrace{au_{j-1}^n}_\text{upwind flux} + \underbrace{\frac{a}{2}\qty(1 - \nu)\Dx\sigma_{j-1}^n}_\text{second-order correction}
+            \end{align*}
+            where $\nu = \frac{a\Dt}{\Dx}$ is the Courant number.
+            \item For Lax-Wendroff,
+            \begin{align*}
+                \Dx\sigma_{j-1}^n = u_j - u_{j-1} = \qty(\Delta u)_{j-\half}
+            \end{align*}
+            \item For $a$ positive or negative, we can write
+            \begin{align*}
+                F_{j-\half}^n = F_{j-\half}^\text{up} + \frac{\abs{a}}{2}\qty(1 - \abs{\nu})\delta_{j-\half}^n
+            \end{align*}
+            where $\delta_{j-\half}^n$ is a limited difference that depends on the solution.
+            \item We need a way to measure smoothness of the solution in order to decide $\delta$.
+            \item Introduce $\theta_{j-\half}$ be a ratio of successive differences
+            \begin{align*}
+                \theta_{j-\half} = \frac{\Delta u_{J_\text{up}-\half}}{\Delta u_{j-\half}}
+            \end{align*}
+            where
+            \begin{align*}
+                J_\text{up} = \begin{cases}
+                    j-1 & a > 0 \\
+                    j+1 & a < 0
+                \end{cases}
+            \end{align*}
+            \item For smooth functions away from extreme points, we expect $\theta\approx1$.
+            \item Now we let
+            \begin{align*}
+                \delta_{j-\half}^n = \phi\qty(\theta_{j-\half})\qty(\Delta u)_{j-\half}
+            \end{align*}
+            and $\phi$ is called the flux limiter function.
+            \item What are good choices of $\phi$?
+            \begin{itemize}
+                \item If $\phi = 0$ we get upwinding.
+                \item If $\phi = 1$ we get Lax-Wendroff.
+                \item If $\phi(\theta) = \theta$ we get Beam Warming
+                \item ``High resolution schemes'' minmod: $\phi(\theta) = \text{minmod}(1,\theta)$.  This picks between the above three.  The problem is that this is really diffusive.
+                \item We have the ``monotonized-centered'' (MC) flux limiter $\phi(\theta) = \max(0,\min(\frac{1+\theta}{2},2,2\theta))$.  This is less diffusive.
+                \item Superbee: $\phi(\theta) = \max(0,\min(1,2\theta),\min(2,\theta))$.  This is the most sharpening.
+                \item Van Leer: $\phi(\theta) = \dfrac{\theta + \abs{\theta}}{1 + \abs{\theta}}$.
+            \end{itemize}
+        \end{itemize}
+
+    \section{Simulations}
+
+        \begin{itemize}
+            \item Upwinding had diffusion but small phase error
+            \item Lax Wendroff has bad (negative) phase error for hogh frequencies with little diffusion.
+            \item Beam Warming has bad (positive) phase error for high frequencies with little diffusion.
+            \item Minmod has much less diffusion than upwinding, very little phase error.  The most diffusive of the ``high resolution schemes.''
+            \item MC limiter has even less diffusion than minmod.  Also very little phase error.
+            \item Superbee looks amazing.  It preserves sharpness the best.  The problem is that superbee sharpens smooth things that shouldn't be sharp.  We saw that after testing for 10 periods.
+            \item Van Leer is the most general ``middle of the road'' limiter function.
+        \end{itemize}
+        All of the high resolution methods are designed to be second-order on smooth data and to avoid introducing unphysical oscillations. \\
+
+    \section{Total Variation}
+
+        The total variation of a grid function
+        \begin{align*}
+            \text{TV}(\underline{u}) = \sum_j\abs{u_{j+1} - u_j}
+        \end{align*}
+        The total variation of a differentiable function $f$ is
+        \begin{align*}
+            \text{TV}(f) = \int_a^b\abs{f'(x)}\dd x
+        \end{align*}
+        So $f(x) = 0$ is no variation.  $f(x) = \sin(0.1x)$ is small variation.  $f(x) = \sin(10x)$ is high variation.
+
+        Let $f_k(x) = e^{ikx}$ on $[0,2\pi)$.  Then
+        \begin{align*}
+            \text{TV}(f_k) = \int_0^{2\pi}\abs{ike^{ikx}}\dd x = 2\pi\abs{k}
+        \end{align*}
+        Next class we will derive the hig-res schemes as natural ways to reduce total variation in time.
+
+\end{document}
+
+
+
+
+
+
+
+
+
+
+
+
